@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MotoLife</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="_desc">moto_life_logo</string>
+    <string name="motolife">MotoLife</string>
+    <string name="motolife_motto">Ride hard or stay home</string>
+    <string name="title_activity_map">Map</string>
+</resources>
