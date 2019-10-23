@@ -7,4 +7,6 @@
     <string name="motolife">MotoLife</string>
     <string name="motolife_motto">Ride hard or stay home</string>
     <string name="title_activity_map">Map</string>
+    <string name="username">Username</string>
+    <string name="RIDING_WAKE_LOCK">RIDING_WAKE_LOCK</string>
 </resources>
