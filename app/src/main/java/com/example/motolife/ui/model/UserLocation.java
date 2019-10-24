@@ -2,21 +2,14 @@ package com.example.motolife.ui.model;
 
 import java.sql.Timestamp;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import androidx.annotation.NonNull;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class UserLocation {
     private int id;
     private String username;
     private Timestamp last_location_update;
-    private Float latitude;
-    private Float longitude;
+    private double latitude;
+    private double longitude;
 
     public int getId() {
         return id;
@@ -42,19 +35,28 @@ public class UserLocation {
         this.last_location_update = last_location_update;
     }
 
-    public Float getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(Float latitude) {
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
 
-    public Float getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(Float longitude) {
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "Username: "+getUsername()+
+                "\n Last update: "+getLast_location_update()+
+                "\n Latitude: "+getLatitude()+
+                "\n Longitude: "+getLongitude();
     }
 }

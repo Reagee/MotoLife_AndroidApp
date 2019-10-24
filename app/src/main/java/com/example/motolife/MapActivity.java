@@ -6,8 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.icu.text.SimpleDateFormat;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
@@ -19,9 +19,10 @@ import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.motolife.ui.model.UserLocation;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -35,11 +36,18 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.Task;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -54,10 +62,12 @@ import static com.example.motolife.R.string.RIDING_WAKE_LOCK;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
-        GoogleMap.OnMarkerClickListener, GoogleMap.OnMyLocationClickListener {
+        GoogleMap.OnMarkerClickListener, GoogleMap.OnMyLocationClickListener, HttpCallback {
 
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
+    private RequestQueue requestQueue;
+    private JSONArray usersLocation;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private static final String API_URL = "http://192.168.0.16:8080/";
 
@@ -67,7 +77,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         setContentView(R.layout.activity_map);
-
+        requestQueue = Volley.newRequestQueue(getApplicationContext());
         PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock =
                 Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(RIDING_WAKE_LOCK));
@@ -106,9 +116,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(300);
-        locationRequest.setFastestInterval(300);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(5000);
+        locationRequest.setFastestInterval(4000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
 
         if (ActivityCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED) {
@@ -127,15 +137,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             if (locationsList.size() > 0) {
                 Location location = locationsList.get(locationsList.size() - 1);
                 LatLng nextLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(nextLatLng)
-                        .zoom(18)
-                        .tilt(45)
-                        .build();
-                mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nextLatLng, mMap.getCameraPosition().zoom));
+                updateUserLocation(location.getLatitude(), location.getLongitude());
                 try {
-                    new UserLocalizationUpdate().execute(location.getLatitude(), location.getLongitude()).get();
-                } catch (ExecutionException | InterruptedException e) {
+                    refreshUsersLocationOnMap();
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
@@ -149,6 +156,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.getUiSettings().setCompassEnabled(true);
         mMap.getUiSettings().setRotateGesturesEnabled(true);
         mMap.getUiSettings().setTiltGesturesEnabled(true);
+        mMap.getUiSettings().setScrollGesturesEnabledDuringRotateOrZoom(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.setOnMyLocationClickListener(this);
     }
 
@@ -161,6 +170,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     protected void onStart() {
         googleApiClient.connect();
         super.onStart();
+        Task<Location> startLocation = LocationServices.getFusedLocationProviderClient(getApplicationContext()).getLastLocation();
+        startLocation.addOnSuccessListener(listener->{
+            if(listener!=null){
+                LatLng loc = new LatLng(
+                        startLocation.getResult().getLatitude(),
+                        startLocation.getResult().getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 12.0f));
+            }
+        });
     }
 
     @Override
@@ -188,12 +206,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         checkLocalizationPersmissions();
 
-        try {
-            String result = new UserLocationGetter().execute().get();
-            Toast.makeText(getApplicationContext(), "Results: "+result, Toast.LENGTH_LONG).show();
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public void checkUsername() {
@@ -241,51 +253,66 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
-    private class UserLocationGetter extends AsyncTask<String, String, String> {
-
-        @Override
-        protected String doInBackground(String... strings) {
-            final String[] result = {null};
-            StringRequest request = new StringRequest
-                    (Request.Method.GET, API_URL + "getLocations", response -> {
-                        System.out.println(response);
-                        result[0] = response;
-                    },
-                            error -> {
-                                Toast.makeText(getApplicationContext(), "Cannot update users' location.", Toast.LENGTH_LONG).show();
-                            });
-            RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-            requestQueue.add(request);
-            return result[0];
-        }
+    private void getUsersLocation(HttpCallback callback) {
+        AtomicReference<JSONArray> result = new AtomicReference<>(new JSONArray());
+        JsonArrayRequest request = new JsonArrayRequest
+                (Request.Method.GET, API_URL + "getLocations", null, response -> {
+                    result.set(response);
+                    callback.onSuccess(response);
+                },
+                        error -> {
+                            Toast.makeText(getApplicationContext(), "Cannot update users' location :" + error, Toast.LENGTH_LONG).show();
+                        });
+        requestQueue.add(request);
     }
 
-    private void refreshUsersLocation() throws ExecutionException, InterruptedException {
-        String result = new UserLocationGetter().execute().get();
-        Toast.makeText(getApplicationContext(), "Results: "+result, Toast.LENGTH_LONG).show();
-    }
+    private void refreshUsersLocationOnMap() throws JSONException {
+        getUsersLocation(this);
+        if (!Objects.equals(usersLocation, null)) {
+            for (int i = 0; i < usersLocation.length(); i++) {
+//                UserLocation userLocation = new Gson().fromJson(usersLocation.getJSONObject(i).toString(), UserLocation.class);
 
-    private class UserLocalizationUpdate extends AsyncTask<Double, Void, Void> {
+                UserLocation user = new UserLocation();
+                user.setId(Integer.parseInt(usersLocation.getJSONObject(i).get("id").toString()));
+                user.setUsername(usersLocation.getJSONObject(i).get("username").toString());
+                user.setLast_location_update(new Timestamp(Long.parseLong(usersLocation.getJSONObject(i).get("last_location_update").toString())));
+                user.setLatitude(Double.parseDouble(usersLocation.getJSONObject(i).get("latitude").toString()));
+                user.setLongitude(Double.parseDouble(usersLocation.getJSONObject(i).get("longitude").toString()));
+                mMap.clear();
+                SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
+                String dateString = formatter.format(new Date(user.getLast_location_update().getTime()));
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(user.getLatitude(), user.getLongitude()))
+                        .title(user.getUsername())
+                        .snippet(dateString));
 
-        @Override
-        protected Void doInBackground(Double... userLocations) {
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            if (preferences.contains("username")) {
-                StringRequest request = new StringRequest
-                        (Request.Method.GET, API_URL + "updateUserLocation" +
-                                "?username=" + preferences.getString("username",
-                                "user" + new Random().nextInt(10000)) +
-                                "&latitude=" + userLocations[0] +
-                                "&longitude=" + userLocations[1], response ->
-                                Toast.makeText(getApplicationContext(), "Location's update has been sent.", Toast.LENGTH_LONG).show(),
-                                error -> {
-                                    Toast.makeText(getApplicationContext(), "Cannot update user location.", Toast.LENGTH_LONG).show();
-                                });
-                System.out.println("!!!!!!!!!!!! " + request.toString() + " !!!!!!!!!!!!");
-                RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-                requestQueue.add(request);
             }
-            return null;
         }
     }
+
+    private void updateUserLocation(double latitude, double longitude) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (preferences.contains("username")) {
+            StringRequest request = new StringRequest
+                    (Request.Method.GET, API_URL + "updateUserLocation" +
+                            "?username=" + preferences.getString("username", "user" + new Random().nextInt(10000)) +
+                            "&latitude=" + latitude +
+                            "&longitude=" + longitude,
+                            response ->
+                                    Toast.makeText(getApplicationContext(), "Location's update has been sent : " + response, Toast.LENGTH_SHORT).show(),
+                            error -> {
+                                Toast.makeText(getApplicationContext(), "Cannot update current location : " + error, Toast.LENGTH_LONG).show();
+                            });
+            requestQueue.add(request);
+        }
+    }
+
+    @Override
+    public void onSuccess(JSONArray array) {
+        usersLocation = array;
+    }
+}
+
+interface HttpCallback {
+    public void onSuccess(JSONArray array);
 }
