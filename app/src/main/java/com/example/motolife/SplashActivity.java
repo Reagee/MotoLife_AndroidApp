@@ -39,7 +39,7 @@ public class SplashActivity extends AppCompatActivity {
                 try {
                     Thread.sleep(1500);
                     for (int i = 0; i <= 100; i++) {
-                        Thread.sleep(5);
+                        Thread.sleep(30);
                         changePercent(i);
                         if(i==100)
                             startActivity(new Intent(SplashActivity.this, MapActivity.class));

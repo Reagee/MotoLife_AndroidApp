@@ -56,8 +56,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2"
-        app:mainColor="#000000"
+        app:mainColor="#ffffff"
         app:secondaryColor="#8b0000"
-        app:textColor="#ffffff"
+        app:textColor="#000000"
         />
 </androidx.constraintlayout.widget.ConstraintLayout>

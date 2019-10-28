@@ -6,15 +6,19 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.WindowManager;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -33,8 +37,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
@@ -59,6 +65,7 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 import static com.example.motolife.R.string.RIDING_WAKE_LOCK;
+import static com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
@@ -68,8 +75,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private GoogleApiClient googleApiClient;
     private RequestQueue requestQueue;
     private JSONArray usersLocation;
+    private Switch darkModeSwitch;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private static final String API_URL = "http://192.168.0.16:8080/";
+    private SharedPreferences sharedPreferences;
+    private static final String API_URL = "http://s1.ct8.pl:25500/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +90,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock =
                 Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(RIDING_WAKE_LOCK));
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
         checkUsername();
         if (checkLocalizationPersmissions())
@@ -138,7 +148,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 Location location = locationsList.get(locationsList.size() - 1);
                 LatLng nextLatLng = new LatLng(location.getLatitude(), location.getLongitude());
 
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nextLatLng, mMap.getCameraPosition().zoom));
+                mMap.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder()
+                        .zoom(mMap.getCameraPosition().zoom)
+                        .bearing(mMap.getCameraPosition().bearing)
+                        .tilt(mMap.getCameraPosition().tilt)
+                        .target(mMap.getCameraPosition().target)
+                        .build()));
                 updateUserLocation(location.getLatitude(), location.getLongitude());
                 try {
                     refreshUsersLocationOnMap();
@@ -151,6 +166,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void setMapSettings() {
         mMap.setIndoorEnabled(false);
+        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,R.raw.standard_map));
         mMap.setMapType(MAP_TYPE_NORMAL);
         mMap.getUiSettings().setMapToolbarEnabled(true);
         mMap.getUiSettings().setCompassEnabled(true);
@@ -159,7 +175,20 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.getUiSettings().setScrollGesturesEnabledDuringRotateOrZoom(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.setOnMyLocationClickListener(this);
+
+        darkModeSwitch = findViewById(R.id.dark_mode_switch);
+        darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
+                darkModeSwitch.setTextColor(Color.WHITE);
+            } else {
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
+                darkModeSwitch.setTextColor(Color.BLACK);
+            }
+        });
     }
+
+
 
     @Override
     public void onBackPressed() {
@@ -176,7 +205,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 LatLng loc = new LatLng(
                         startLocation.getResult().getLatitude(),
                         startLocation.getResult().getLongitude());
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 12.0f));
+                mMap.moveCamera(newLatLngZoom(loc, 12.0f));
             }
         });
     }
@@ -189,7 +218,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        Toast.makeText(MapActivity.this, marker.getTitle(), Toast.LENGTH_SHORT).show();
         return true;
     }
 
@@ -268,9 +296,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void refreshUsersLocationOnMap() throws JSONException {
         getUsersLocation(this);
+        mMap.clear();
         if (!Objects.equals(usersLocation, null)) {
             for (int i = 0; i < usersLocation.length(); i++) {
-//                UserLocation userLocation = new Gson().fromJson(usersLocation.getJSONObject(i).toString(), UserLocation.class);
+                if(usersLocation.getJSONObject(i).getString("username")
+                        .equalsIgnoreCase(sharedPreferences.getString("username", "user")))
+                    continue;
 
                 UserLocation user = new UserLocation();
                 user.setId(Integer.parseInt(usersLocation.getJSONObject(i).get("id").toString()));
@@ -278,13 +309,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 user.setLast_location_update(new Timestamp(Long.parseLong(usersLocation.getJSONObject(i).get("last_location_update").toString())));
                 user.setLatitude(Double.parseDouble(usersLocation.getJSONObject(i).get("latitude").toString()));
                 user.setLongitude(Double.parseDouble(usersLocation.getJSONObject(i).get("longitude").toString()));
-                mMap.clear();
                 SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
                 String dateString = formatter.format(new Date(user.getLast_location_update().getTime()));
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(user.getLatitude(), user.getLongitude()))
                         .title(user.getUsername())
-                        .snippet(dateString));
+                        .snippet(dateString))
+                        .setIcon(BitmapDescriptorFactory.fromResource(R.drawable.helmet_small));
+
 
             }
         }
@@ -299,7 +331,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                             "&latitude=" + latitude +
                             "&longitude=" + longitude,
                             response ->
-                                    Toast.makeText(getApplicationContext(), "Location's update has been sent : " + response, Toast.LENGTH_SHORT).show(),
+                                    Log.println(Log.INFO,"RESPONSE", response),
                             error -> {
                                 Toast.makeText(getApplicationContext(), "Cannot update current location : " + error, Toast.LENGTH_LONG).show();
                             });
