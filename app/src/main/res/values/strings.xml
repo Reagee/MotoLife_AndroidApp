@@ -13,4 +13,5 @@
     <string name="write_message_to_user">Napisz wiadomość</string>
     <string name="poke_user">Zaczep</string>
     <string name="exit">Wyjdź</string>
+    <string name="navbar_bottom_username_text">Username</string>
 </resources>

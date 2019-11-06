@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
@@ -14,21 +15,22 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.motolife.ui.model.UserLocation;
+import com.example.motolife.ui.model.UserPoke;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -47,6 +49,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -81,7 +84,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private BottomNavigationView bottomBar;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private SharedPreferences sharedPreferences;
-    private static final String API_URL = "http://s1.ct8.pl:25500/";
+
+    private UserPoke userPoke;
+    private Marker clickedMarker;
+    private TextView bottomNavBarText;
+    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
+    private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,6 +148,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.setMyLocationEnabled(true);
         fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
         setMapSettings();
+        try {
+            refreshUsersLocationOnMap();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     LocationCallback locationCallback = new LocationCallback() {
@@ -224,17 +237,28 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        bottomNavBarText = findViewById(R.id.bottomNavBarText);
         bottomBar = findViewById(R.id.map_bottom_nav);
+        bottomBar.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
+        bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
+        bottomBar.setItemHorizontalTranslationEnabled(true);
+        bottomBar.setItemIconTintList(ColorStateList.valueOf(Color.BLACK));
         bottomBar.setOnNavigationItemSelectedListener(menuItem -> {
             switch (menuItem.getItemId()) {
                 case R.id.nav_message:
-                    Toast.makeText(getApplicationContext(),"User messaged !",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "User messaged !", Toast.LENGTH_SHORT).show();
                     break;
                 case R.id.nav_poke:
-                    Toast.makeText(getApplicationContext(),"User Poked !",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
+                    pokeUser(clickedMarker, this);
+//                    wrong as shit
+                    if (!Objects.equals(userPoke, null) && sharedPreferences.getString("username", "noname")
+                            .equalsIgnoreCase(userPoke.getUserToPoke()))
+                        Toast.makeText(getApplicationContext(), "User " + userPoke.getUsername() + " has poked you !", Toast.LENGTH_LONG).show();
                     break;
                 case R.id.nav_exit:
                     bottomBar.setVisibility(View.INVISIBLE);
+                    bottomNavBarText.setVisibility(View.INVISIBLE);
                     break;
             }
             return true;
@@ -245,6 +269,30 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 .build();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         checkLocalizationPersmissions();
+    }
+
+    private void pokeUser(Marker clickedMarker, HttpCallback callback) {
+        if (sharedPreferences.contains("username")) {
+            JsonObjectRequest request = new JsonObjectRequest
+                    (Request.Method.GET, API_URL + "pokeUser" +
+                            "?username=" + sharedPreferences.getString("username", "user" + new Random().nextInt(10000)) +
+                            "&userToPoke=" + clickedMarker.getTitle(), null,
+                            response -> {
+                                Log.println(Log.INFO, "RESPONSE", response.toString());
+                                UserPoke userPoke = new UserPoke("Error", "Error");
+                                try {
+                                    userPoke = new UserPoke(response.getString("username"), response.getString("userToPoke"));
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                callback.onSuccessPoke(userPoke);
+                            },
+                            error -> {
+                                Toast.makeText(getApplicationContext(), "Error while poking the user '" + clickedMarker.getTitle() + "'" +
+                                        ", error:" + error, Toast.LENGTH_LONG).show();
+                            });
+            requestQueue.add(request);
+        }
     }
 
     public void checkUsername() {
@@ -354,12 +402,22 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
     @Override
+    public void onSuccessPoke(UserPoke userPoke) {
+        this.userPoke = userPoke;
+    }
+
+    @Override
     public boolean onMarkerClick(Marker marker) {
         bottomBar.setVisibility(View.VISIBLE);
+        bottomNavBarText.setVisibility(View.VISIBLE);
+        bottomNavBarText.setText(marker.getTitle());
+        clickedMarker = marker;
         return true;
     }
 }
 
 interface HttpCallback {
     public void onSuccess(JSONArray array);
+
+    public void onSuccessPoke(UserPoke userPoke);
 }
