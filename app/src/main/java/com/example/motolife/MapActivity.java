@@ -14,6 +14,8 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -44,6 +46,7 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -68,14 +71,14 @@ import static com.example.motolife.R.string.RIDING_WAKE_LOCK;
 import static com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 
-public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
-        GoogleMap.OnMarkerClickListener, GoogleMap.OnMyLocationClickListener, HttpCallback {
+public class MapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, HttpCallback, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
     private RequestQueue requestQueue;
     private JSONArray usersLocation;
     private Switch darkModeSwitch;
+    private BottomNavigationView bottomBar;
     private FusedLocationProviderClient fusedLocationProviderClient;
     private SharedPreferences sharedPreferences;
     private static final String API_URL = "http://s1.ct8.pl:25500/";
@@ -166,7 +169,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void setMapSettings() {
         mMap.setIndoorEnabled(false);
-        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this,R.raw.standard_map));
+        mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
         mMap.setMapType(MAP_TYPE_NORMAL);
         mMap.getUiSettings().setMapToolbarEnabled(true);
         mMap.getUiSettings().setCompassEnabled(true);
@@ -175,6 +178,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.getUiSettings().setScrollGesturesEnabledDuringRotateOrZoom(true);
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.setOnMyLocationClickListener(this);
+        mMap.setOnMarkerClickListener(this);
 
         darkModeSwitch = findViewById(R.id.dark_mode_switch);
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -189,7 +193,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
 
-
     @Override
     public void onBackPressed() {
     }
@@ -200,8 +203,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         googleApiClient.connect();
         super.onStart();
         Task<Location> startLocation = LocationServices.getFusedLocationProviderClient(getApplicationContext()).getLastLocation();
-        startLocation.addOnSuccessListener(listener->{
-            if(listener!=null){
+        startLocation.addOnSuccessListener(listener -> {
+            if (listener != null) {
                 LatLng loc = new LatLng(
                         startLocation.getResult().getLatitude(),
                         startLocation.getResult().getLongitude());
@@ -216,24 +219,32 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         super.onStop();
     }
 
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        return true;
-    }
-
     public void initializeMap() {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        bottomBar = findViewById(R.id.map_bottom_nav);
+        bottomBar.setOnNavigationItemSelectedListener(menuItem -> {
+            switch (menuItem.getItemId()) {
+                case R.id.nav_message:
+                    Toast.makeText(getApplicationContext(),"User messaged !",Toast.LENGTH_SHORT).show();
+                    break;
+                case R.id.nav_poke:
+                    Toast.makeText(getApplicationContext(),"User Poked !",Toast.LENGTH_SHORT).show();
+                    break;
+                case R.id.nav_exit:
+                    bottomBar.setVisibility(View.INVISIBLE);
+                    break;
+            }
+            return true;
+        });
 
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .build();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         checkLocalizationPersmissions();
-
     }
 
     public void checkUsername() {
@@ -299,7 +310,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.clear();
         if (!Objects.equals(usersLocation, null)) {
             for (int i = 0; i < usersLocation.length(); i++) {
-                if(usersLocation.getJSONObject(i).getString("username")
+                if (usersLocation.getJSONObject(i).getString("username")
                         .equalsIgnoreCase(sharedPreferences.getString("username", "user")))
                     continue;
 
@@ -316,8 +327,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                         .title(user.getUsername())
                         .snippet(dateString))
                         .setIcon(BitmapDescriptorFactory.fromResource(R.drawable.helmet_small));
-
-
             }
         }
     }
@@ -331,7 +340,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                             "&latitude=" + latitude +
                             "&longitude=" + longitude,
                             response ->
-                                    Log.println(Log.INFO,"RESPONSE", response),
+                                    Log.println(Log.INFO, "RESPONSE", response),
                             error -> {
                                 Toast.makeText(getApplicationContext(), "Cannot update current location : " + error, Toast.LENGTH_LONG).show();
                             });
@@ -342,6 +351,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     @Override
     public void onSuccess(JSONArray array) {
         usersLocation = array;
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        bottomBar.setVisibility(View.VISIBLE);
+        return true;
     }
 }
 

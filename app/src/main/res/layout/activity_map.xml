@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:map="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="match_parent"
     android:layout_width="match_parent"
-    >
+    android:layout_height="match_parent">
 
     <fragment
         android:id="@+id/map"
@@ -26,5 +24,14 @@
         map:layout_constraintHorizontal_bias="0.048"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/map_bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        map:layout_constraintBottom_toBottomOf="@+id/map"
+        map:menu="@menu/bottom_nav_menu"
+        android:visibility="invisible"
+        android:background="@android:color/white"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

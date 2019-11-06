@@ -10,4 +10,7 @@
     <string name="username">Username</string>
     <string name="RIDING_WAKE_LOCK">RIDING_WAKE_LOCK</string>
     <string name="dark_mode_button_text">Dark mode</string>
+    <string name="write_message_to_user">Napisz wiadomość</string>
+    <string name="poke_user">Zaczep</string>
+    <string name="exit">Wyjdź</string>
 </resources>
