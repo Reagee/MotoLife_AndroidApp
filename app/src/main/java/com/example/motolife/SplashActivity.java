@@ -1,18 +1,29 @@
 package com.example.motolife;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import java.util.Objects;
 
 public class SplashActivity extends AppCompatActivity {
 
     AnimatedCircleLoadingView animatedCircleLoadingView;
+    private static final String TAG = "SplashActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +35,20 @@ public class SplashActivity extends AppCompatActivity {
         animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
         startLoading();
         startPercentMockThread();
+
+        FirebaseInstanceId.getInstance().getInstanceId()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w(TAG, "getInstanceId failed", task.getException());
+                        return;
+                    }
+                    String token = Objects.requireNonNull(task.getResult()).getToken();
+
+                    String msg = getString(R.string.msg_token_fmt, token);
+                    Log.d(TAG, msg);
+                    Toast.makeText(SplashActivity.this, msg, Toast.LENGTH_SHORT).show();
+                });
+        FirebaseMessaging.getInstance().setAutoInitEnabled(true);
     }
 
 
