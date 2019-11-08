@@ -8,6 +8,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
 import android.os.Bundle;
@@ -29,6 +31,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.motolife.ui.SoundService;
 import com.example.motolife.ui.model.UserLocation;
 import com.example.motolife.ui.model.UserPoke;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -88,8 +91,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private UserPoke userPoke;
     private Marker clickedMarker;
     private TextView bottomNavBarText;
-    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
-    private static final String API_URL = "http://192.168.0.16:8080/";
+        private static final String API_URL = "http://s1.ct8.pl:25500/";
+//    private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -198,9 +201,21 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             if (isChecked) {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
                 darkModeSwitch.setTextColor(Color.WHITE);
+                bottomBar.setBackgroundColor(Color.parseColor("#202C38"));
+                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.WHITE));
+                bottomNavBarText.setTextColor(Color.WHITE);
+
+                GradientDrawable gd = new GradientDrawable();
+                gd.setColor(Color.parseColor("#202C38"));
+                gd.setStroke(1, 0xFF000000);
+                bottomNavBarText.setBackground(gd);
             } else {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
                 darkModeSwitch.setTextColor(Color.BLACK);
+                bottomBar.setBackgroundColor(Color.parseColor("#ffffff"));
+                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
+                bottomNavBarText.setTextColor(Color.BLACK);
+                bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
             }
         });
     }
@@ -251,6 +266,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 case R.id.nav_poke:
                     Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
                     pokeUser(clickedMarker, this);
+                   new SoundService(this).makePokeSound();
 //                    wrong as shit
                     if (!Objects.equals(userPoke, null) && sharedPreferences.getString("username", "noname")
                             .equalsIgnoreCase(userPoke.getUserToPoke()))
@@ -417,7 +433,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 }
 
 interface HttpCallback {
-    public void onSuccess(JSONArray array);
+    void onSuccess(JSONArray array);
 
-    public void onSuccessPoke(UserPoke userPoke);
+    void onSuccessPoke(UserPoke userPoke);
 }
