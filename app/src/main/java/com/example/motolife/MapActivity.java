@@ -2,8 +2,11 @@ package com.example.motolife;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -100,6 +103,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         setContentView(R.layout.activity_map);
+
+        String channelId = getString(R.string.default_notification_channel_id);
+        String channelName = getString(R.string.default_notification_channel_name);
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(new NotificationChannel(
+                channelId, channelName, NotificationManager.IMPORTANCE_LOW));
+        Intent intent=new Intent(MapActivity.this, MyFirebaseMessagingService.class);
+        startService(intent);
+
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock =
@@ -110,6 +122,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         if (checkLocalizationPersmissions())
             initializeMap();
     }
+
 
     private boolean checkLocalizationPersmissions() {
         while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)

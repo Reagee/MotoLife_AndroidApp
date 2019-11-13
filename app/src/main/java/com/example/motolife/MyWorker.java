@@ -1,26 +1,24 @@
 package com.example.motolife;
 
 import android.content.Context;
-
-import com.google.common.util.concurrent.ListenableFuture;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.work.ListenableWorker;
+import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-class MyWorker extends ListenableWorker {
+class MyWorker extends Worker {
 
-    /**
-     * @param appContext   The application {@link Context}
-     * @param workerParams Parameters to setup the internal state of this worker
-     */
+    private static final String TAG = "MyWorker";
+
     public MyWorker(@NonNull Context appContext, @NonNull WorkerParameters workerParams) {
         super(appContext, workerParams);
     }
 
     @NonNull
     @Override
-    public ListenableFuture<Result> startWork() {
-        return null;
+    public Result doWork() {
+        Log.d(TAG, "Performing long running task in scheduled job");
+        return Result.success();
     }
 }
