@@ -52,4 +52,17 @@
         android:visibility="invisible"
         android:background="@android:color/white"/>
 
+    <Button
+        android:id="@+id/logout"
+        android:layout_width="66dp"
+        android:layout_height="25dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/common_google_signin_btn_text_dark_disabled"
+        android:text="@string/logout"
+        android:textSize="10dp"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintHorizontal_bias="0.73"
+        map:layout_constraintStart_toEndOf="@+id/dark_mode_switch"
+        map:layout_constraintTop_toTopOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

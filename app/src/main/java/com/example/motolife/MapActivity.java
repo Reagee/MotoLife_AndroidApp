@@ -22,6 +22,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Switch;
@@ -56,6 +57,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -94,8 +97,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private UserPoke userPoke;
     private Marker clickedMarker;
     private TextView bottomNavBarText;
-        private static final String API_URL = "http://s1.ct8.pl:25500/";
-//    private static final String API_URL = "http://192.168.0.16:8080/";
+    private FirebaseUser firebaseUser;
+    private FirebaseAuth firebaseAuth;
+
+    private Button logoutButton;
+//        private static final String API_URL = "http://s1.ct8.pl:25500/";
+    private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,8 +124,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         PowerManager.WakeLock wakeLock =
                 Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(RIDING_WAKE_LOCK));
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        firebaseAuth = FirebaseAuth.getInstance();
+        firebaseUser = firebaseAuth.getCurrentUser();
 
-        checkUsername();
+//        checkUsername();
         if (checkLocalizationPersmissions())
             initializeMap();
     }
@@ -210,6 +219,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.setOnMarkerClickListener(this);
 
         darkModeSwitch = findViewById(R.id.dark_mode_switch);
+        logoutButton = findViewById(R.id.logout);
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
@@ -230,6 +240,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 bottomNavBarText.setTextColor(Color.BLACK);
                 bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
             }
+        });
+
+        logoutButton.setOnClickListener(click->{
+            firebaseAuth.signOut();
+            startActivity(new Intent(MapActivity.this,LoginActivity.class));
+            finish();
         });
     }
 
@@ -301,62 +317,42 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
     private void pokeUser(Marker clickedMarker, HttpCallback callback) {
-        if (sharedPreferences.contains("username")) {
-            JsonObjectRequest request = new JsonObjectRequest
-                    (Request.Method.GET, API_URL + "pokeUser" +
-                            "?username=" + sharedPreferences.getString("username", "user" + new Random().nextInt(10000)) +
-                            "&userToPoke=" + clickedMarker.getTitle(), null,
-                            response -> {
-                                Log.println(Log.INFO, "RESPONSE", response.toString());
-                                UserPoke userPoke = new UserPoke("Error", "Error");
-                                try {
-                                    userPoke = new UserPoke(response.getString("username"), response.getString("userToPoke"));
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                callback.onSuccessPoke(userPoke);
-                            },
-                            error -> {
-                                Toast.makeText(getApplicationContext(), "Error while poking the user '" + clickedMarker.getTitle() + "'" +
-                                        ", error:" + error, Toast.LENGTH_LONG).show();
-                            });
-            requestQueue.add(request);
-        }
+
     }
 
-    public void checkUsername() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (!preferences.contains("username")) {
-            AlertDialog.Builder usernameDialog = new AlertDialog.Builder(this);
-            usernameDialog
-                    .setTitle("Enter your username")
-                    .setMessage("It is required to show your location on a map.");
-
-            final EditText usernameInput = new EditText(this);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.MarginLayoutParams.WRAP_CONTENT);
-            usernameInput.setLayoutParams(lp);
-            usernameDialog.setView(usernameInput);
-            usernameDialog
-                    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences.Editor editor = preferences.edit();
-                            String username = usernameInput.getText().toString();
-                            if (!Objects.equals(username, null) && !username.isEmpty()) {
-                                editor.putString("username", usernameInput.getText().toString());
-                                editor.apply();
-                                dialog.dismiss();
-                            } else {
-                                usernameInput.setError("Provide your username");
-                            }
-                        }
-                    })
-                    .show();
-        }
-    }
+//    public void checkUsername() {
+//        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+//        if (!preferences.contains("username")) {
+//            AlertDialog.Builder usernameDialog = new AlertDialog.Builder(this);
+//            usernameDialog
+//                    .setTitle("Enter your username")
+//                    .setMessage("It is required to show your location on a map.");
+//
+//            final EditText usernameInput = new EditText(this);
+//            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.MATCH_PARENT,
+//                    LinearLayout.LayoutParams.MATCH_PARENT,
+//                    LinearLayout.MarginLayoutParams.WRAP_CONTENT);
+//            usernameInput.setLayoutParams(lp);
+//            usernameDialog.setView(usernameInput);
+//            usernameDialog
+//                    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            SharedPreferences.Editor editor = preferences.edit();
+//                            String username = usernameInput.getText().toString();
+//                            if (!Objects.equals(username, null) && !username.isEmpty()) {
+//                                editor.putString("username", usernameInput.getText().toString());
+//                                editor.apply();
+//                                dialog.dismiss();
+//                            } else {
+//                                usernameInput.setError("Provide your username");
+//                            }
+//                        }
+//                    })
+//                    .show();
+//        }
+//    }
 
     @Override
     public void onMyLocationClick(Location location) {
@@ -387,13 +383,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.clear();
         if (!Objects.equals(usersLocation, null)) {
             for (int i = 0; i < usersLocation.length(); i++) {
-                if (usersLocation.getJSONObject(i).getString("username")
-                        .equalsIgnoreCase(sharedPreferences.getString("username", "user")))
-                    continue;
+//                    if (usersLocation.getJSONObject(i).getString("user_id")
+//                        .equalsIgnoreCase(firebaseUser.getEmail()))
+//                    continue;
 
                 UserLocation user = new UserLocation();
                 user.setId(Integer.parseInt(usersLocation.getJSONObject(i).get("id").toString()));
-                user.setUsername(usersLocation.getJSONObject(i).get("username").toString());
+                //user.setUsername(usersLocation.getJSONObject(i).get("user_id").toString());
                 user.setLast_location_update(new Timestamp(Long.parseLong(usersLocation.getJSONObject(i).get("last_location_update").toString())));
                 user.setLatitude(Double.parseDouble(usersLocation.getJSONObject(i).get("latitude").toString()));
                 user.setLongitude(Double.parseDouble(usersLocation.getJSONObject(i).get("longitude").toString()));
@@ -409,11 +405,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
     private void updateUserLocation(double latitude, double longitude) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if (preferences.contains("username")) {
+
+        if (!Objects.equals(firebaseUser,null)) {
             StringRequest request = new StringRequest
                     (Request.Method.GET, API_URL + "updateUserLocation" +
-                            "?username=" + preferences.getString("username", "user" + new Random().nextInt(10000)) +
+                            "?email=" + firebaseUser.getEmail() +
                             "&latitude=" + latitude +
                             "&longitude=" + longitude,
                             response ->
