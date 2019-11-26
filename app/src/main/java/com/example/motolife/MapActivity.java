@@ -1,30 +1,27 @@
 package com.example.motolife;
 
 import android.Manifest;
-import android.app.AlertDialog;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
+import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,7 +29,6 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.motolife.ui.SoundService;
@@ -59,6 +55,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,7 +65,6 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
@@ -92,16 +89,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private Switch darkModeSwitch;
     private BottomNavigationView bottomBar;
     private FusedLocationProviderClient fusedLocationProviderClient;
-    private SharedPreferences sharedPreferences;
 
     private UserPoke userPoke;
+    private String globalUsername;
     private Marker clickedMarker;
     private TextView bottomNavBarText;
     private FirebaseUser firebaseUser;
     private FirebaseAuth firebaseAuth;
 
     private Button logoutButton;
-//        private static final String API_URL = "http://s1.ct8.pl:25500/";
+    //        private static final String API_URL = "http://s1.ct8.pl:25500/";
     private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
@@ -116,16 +113,16 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(new NotificationChannel(
                 channelId, channelName, NotificationManager.IMPORTANCE_LOW));
-        Intent intent=new Intent(MapActivity.this, MyFirebaseMessagingService.class);
+        Intent intent = new Intent(MapActivity.this, MyFirebaseMessagingService.class);
         startService(intent);
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock =
                 Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(RIDING_WAKE_LOCK));
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
+        getUsernameAtStart(this);
 
 //        checkUsername();
         if (checkLocalizationPersmissions())
@@ -242,9 +239,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             }
         });
 
-        logoutButton.setOnClickListener(click->{
+        logoutButton.setOnClickListener(click -> {
             firebaseAuth.signOut();
-            startActivity(new Intent(MapActivity.this,LoginActivity.class));
+            startActivity(new Intent(MapActivity.this, LoginActivity.class));
             finish();
         });
     }
@@ -294,12 +291,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     break;
                 case R.id.nav_poke:
                     Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
-                    pokeUser(clickedMarker, this);
-                   new SoundService(this).makePokeSound();
-//                    wrong as shit
-                    if (!Objects.equals(userPoke, null) && sharedPreferences.getString("username", "noname")
-                            .equalsIgnoreCase(userPoke.getUserToPoke()))
-                        Toast.makeText(getApplicationContext(), "User " + userPoke.getUsername() + " has poked you !", Toast.LENGTH_LONG).show();
+                    new SoundService(this).makePokeSound();
+                    subscribeToTopic(getMarkerUsername(clickedMarker));
+                    pokeUser();
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic(getMarkerUsername(clickedMarker));
                     break;
                 case R.id.nav_exit:
                     bottomBar.setVisibility(View.INVISIBLE);
@@ -316,8 +311,28 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         checkLocalizationPersmissions();
     }
 
-    private void pokeUser(Marker clickedMarker, HttpCallback callback) {
+    private void pokeUser() {
+        RemoteMessage message = new RemoteMessage.Builder("Poke")
+                .addData("New Poke !", "User "+this.globalUsername+" has just Poked you !")
+                .setTtl(3600)
+                .setMessageType("Poke")
+                .build();
+        FirebaseMessaging.getInstance().send(message);
+    }
 
+    private String getMarkerUsername(Marker marker) {
+        return marker.getTitle().substring(0, marker.getTitle().indexOf("(") - 1);
+    }
+
+    private void subscribeToTopic(String topic) {
+        FirebaseMessaging.getInstance().subscribeToTopic(topic).addOnCompleteListener(
+                task -> {
+                    String msg = "Subscribed to " + topic + " topic.";
+                    if (!task.isSuccessful())
+                        msg = "Failed to subscribed to " + topic + " topic.";
+                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+                }
+        );
     }
 
 //    public void checkUsername() {
@@ -383,13 +398,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.clear();
         if (!Objects.equals(usersLocation, null)) {
             for (int i = 0; i < usersLocation.length(); i++) {
-//                    if (usersLocation.getJSONObject(i).getString("user_id")
-//                        .equalsIgnoreCase(firebaseUser.getEmail()))
-//                    continue;
+                if (usersLocation.getJSONObject(i).getString("email")
+                        .equalsIgnoreCase(firebaseUser.getEmail()))
+                    continue;
 
                 UserLocation user = new UserLocation();
                 user.setId(Integer.parseInt(usersLocation.getJSONObject(i).get("id").toString()));
-                //user.setUsername(usersLocation.getJSONObject(i).get("user_id").toString());
+                user.setUsername(usersLocation.getJSONObject(i).get("username").toString());
+                user.setEmail(usersLocation.getJSONObject(i).get("email").toString());
                 user.setLast_location_update(new Timestamp(Long.parseLong(usersLocation.getJSONObject(i).get("last_location_update").toString())));
                 user.setLatitude(Double.parseDouble(usersLocation.getJSONObject(i).get("latitude").toString()));
                 user.setLongitude(Double.parseDouble(usersLocation.getJSONObject(i).get("longitude").toString()));
@@ -397,7 +413,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 String dateString = formatter.format(new Date(user.getLast_location_update().getTime()));
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(user.getLatitude(), user.getLongitude()))
-                        .title(user.getUsername())
+                        .title(user.getUsername() + " (" + user.getEmail() + ")")
                         .snippet(dateString))
                         .setIcon(BitmapDescriptorFactory.fromResource(R.drawable.helmet_small));
             }
@@ -406,7 +422,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void updateUserLocation(double latitude, double longitude) {
 
-        if (!Objects.equals(firebaseUser,null)) {
+        if (!Objects.equals(firebaseUser, null)) {
             StringRequest request = new StringRequest
                     (Request.Method.GET, API_URL + "updateUserLocation" +
                             "?email=" + firebaseUser.getEmail() +
@@ -421,6 +437,19 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         }
     }
 
+    private void getUsernameAtStart(HttpCallback callback) {
+        StringRequest request = new StringRequest
+                (Request.Method.GET, API_URL + "getUsername?email=" + firebaseUser.getEmail(),
+                        response -> {
+                            Log.println(Log.INFO, "RESPONSE SUBSCRIBE: ", response);
+                            callback.onSuccessUsernameGet(response);
+                        },
+                        error -> Toast.makeText(getApplicationContext(),
+                                "Cannot subscribe to topic: " + error, Toast.LENGTH_LONG).show()
+                );
+        requestQueue.add(request);
+    }
+
     @Override
     public void onSuccess(JSONArray array) {
         usersLocation = array;
@@ -429,6 +458,18 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     @Override
     public void onSuccessPoke(UserPoke userPoke) {
         this.userPoke = userPoke;
+    }
+
+    @Override
+    public void onSuccessUsernameGet(String username) {
+        if(!Objects.equals(username,null)) {
+            subscribeToTopic(username);
+            this.globalUsername = username;
+        }
+        else{
+            getUsernameAtStart(this);
+            subscribeToTopic(this.globalUsername);
+        }
     }
 
     @Override
@@ -445,4 +486,6 @@ interface HttpCallback {
     void onSuccess(JSONArray array);
 
     void onSuccessPoke(UserPoke userPoke);
+
+    void onSuccessUsernameGet(String username);
 }

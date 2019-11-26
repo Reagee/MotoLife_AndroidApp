@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 public class UserLocation {
     private int id;
     private String username;
+    private String email;
     private Timestamp last_location_update;
     private double latitude;
     private double longitude;
@@ -26,6 +27,10 @@ public class UserLocation {
     public void setUsername(String username) {
         this.username = username;
     }
+
+    public String getEmail() { return email; }
+
+    public void setEmail(String email) { this.email = email; }
 
     public Timestamp getLast_location_update() {
         return last_location_update;
@@ -55,6 +60,7 @@ public class UserLocation {
     @Override
     public String toString() {
         return "Username: "+getUsername()+
+                "\n Email: " + getEmail()+
                 "\n Last update: "+getLast_location_update()+
                 "\n Latitude: "+getLatitude()+
                 "\n Longitude: "+getLongitude();
