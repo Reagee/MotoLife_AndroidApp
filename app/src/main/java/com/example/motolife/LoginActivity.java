@@ -44,7 +44,7 @@ public class LoginActivity extends AppCompatActivity {
 
         authStateListener = firebaseAuth -> {
             FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-            if (firebaseUser != null) {
+            if (Objects.nonNull(firebaseUser)) {
                 if (firebaseUser.getUid().equals(firebaseAuth.getUid()))
                     startActivity(new Intent(LoginActivity.this, MapActivity.class));
             } else

@@ -1,7 +1,5 @@
 package com.example.motolife;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,12 +13,13 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class RegistrationActivity extends AppCompatActivity {
 
@@ -31,7 +30,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private Button backToLogin;
     private FirebaseAuth firebaseAuth;
     private RequestQueue requestQueue;
-    //        private static final String API_URL = "http://s1.ct8.pl:25500/";
+    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
     private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
@@ -41,16 +40,7 @@ public class RegistrationActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
-        firebaseAuth = FirebaseAuth.getInstance();
-        requestQueue = Volley.newRequestQueue(getApplicationContext());
-
-
-        username = findViewById(R.id.username_registration);
-        email = findViewById(R.id.email_registration);
-        password = findViewById(R.id.password_registration);
-        registerButton = findViewById(R.id.register_button);
-        backToLogin = findViewById(R.id.back_to_login_button);
-
+        initializeFields();
 
         registerButton.setOnClickListener(click -> {
             if (validateInputs(Arrays.asList(username, email, password))) {
@@ -66,7 +56,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Task successful :)", Toast.LENGTH_SHORT).show();
                                 StringRequest request = new StringRequest(
                                         Request.Method.GET, API_URL + "addUser" +
-                                        "?username=" + usernameVal+
+                                        "?username=" + usernameVal +
                                         "&email=" + emailVal +
                                         "&token=" + firebaseAuth.getUid(),
                                         response ->
@@ -83,18 +73,28 @@ public class RegistrationActivity extends AppCompatActivity {
             registerButton.setError("Provide proper registration data.");
         });
 
-        backToLogin.setOnClickListener(click->{
+        backToLogin.setOnClickListener(click -> {
             startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
         });
 
     }
 
+    private void initializeFields() {
+        firebaseAuth = FirebaseAuth.getInstance();
+        requestQueue = Volley.newRequestQueue(getApplicationContext());
+        username = findViewById(R.id.username_registration);
+        email = findViewById(R.id.email_registration);
+        password = findViewById(R.id.password_registration);
+        registerButton = findViewById(R.id.register_button);
+        backToLogin = findViewById(R.id.back_to_login_button);
+    }
 
     private boolean validateInputs(List<EditText> inputs) {
         registerButton.setError(null);
         AtomicBoolean flag = new AtomicBoolean(true);
         inputs.forEach(input -> {
-            if (Objects.equals(input, null) || input.getText().toString().isEmpty()) flag.set(false);
+            if (Objects.equals(input, null) || input.getText().toString().isEmpty())
+                flag.set(false);
         });
         return flag.get();
     }

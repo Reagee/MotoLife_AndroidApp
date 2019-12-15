@@ -98,7 +98,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private FirebaseAuth firebaseAuth;
 
     private Button logoutButton;
-    //        private static final String API_URL = "http://s1.ct8.pl:25500/";
+//    private static final String API_URL = "http://s1.ct8.pl:25500/";
     private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
@@ -313,7 +313,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void pokeUser() {
         RemoteMessage message = new RemoteMessage.Builder("Poke")
-                .addData("New Poke !", "User "+this.globalUsername+" has just Poked you !")
+                .addData("New Poke !", "User " + this.globalUsername + " has just Poked you !")
                 .setTtl(3600)
                 .setMessageType("Poke")
                 .build();
@@ -462,11 +462,10 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public void onSuccessUsernameGet(String username) {
-        if(!Objects.equals(username,null)) {
+        if (!Objects.equals(username, null)) {
             subscribeToTopic(username);
             this.globalUsername = username;
-        }
-        else{
+        } else {
             getUsernameAtStart(this);
             subscribeToTopic(this.globalUsername);
         }

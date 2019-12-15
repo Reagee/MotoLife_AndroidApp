@@ -27,7 +27,7 @@ public class SplashActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener authStateListener;
     private FirebaseAuth auth;
     private RequestQueue requestQueue;
-    //private static final String API_URL = "http://s1.ct8.pl:25500/";
+    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
     private static final String API_URL = "http://192.168.0.16:8080/";
     private boolean state = true;
 
@@ -42,7 +42,6 @@ public class SplashActivity extends AppCompatActivity {
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
         startLoading();
-//        startPercentMockThread();
         try {
             Thread.sleep(1500);
             checkConnection();
@@ -50,7 +49,6 @@ public class SplashActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
         changeActivity(state);
     }
 
@@ -83,10 +81,6 @@ public class SplashActivity extends AppCompatActivity {
 
     private void changePercent(final int percent) {
         runOnUiThread(() -> animatedCircleLoadingView.setPercent(percent));
-    }
-
-    public void resetLoading() {
-        runOnUiThread(() -> animatedCircleLoadingView.resetLoading());
     }
 
     private void checkConnection() throws InterruptedException {
@@ -128,7 +122,7 @@ public class SplashActivity extends AppCompatActivity {
         changePercent(100);
         authStateListener = firebaseAuth -> {
             FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-            if (!Objects.equals(firebaseUser, null))
+            if (Objects.nonNull(firebaseUser))
                 startActivity(new Intent(SplashActivity.this, MapActivity.class));
             else
                 startActivity(new Intent(SplashActivity.this, LoginActivity.class));

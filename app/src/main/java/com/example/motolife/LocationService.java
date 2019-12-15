@@ -1,11 +1,8 @@
 package com.example.motolife;
 
 
-import android.Manifest;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -13,7 +10,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 public class LocationService extends Service {
     public static final String BROADCAST_ACTION = "Hello World";
@@ -33,11 +32,11 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         listener = new MyLocationListener();
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        if (checkSelfPermission(ACCESS_FINE_LOCATION) != PERMISSION_GRANTED && checkSelfPermission(ACCESS_COARSE_LOCATION) != PERMISSION_GRANTED)
             return super.onStartCommand(intent, flags, startId);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 4000, 0, (LocationListener) listener);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 4000, 0, listener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 4000, 0, listener);
         return super.onStartCommand(intent, flags, startId);
     }
@@ -58,7 +57,6 @@ public class LocationService extends Service {
             return true;
         }
 
-        // Check whether the new location fix is newer or older
         long timeDelta = location.getTime() - currentBestLocation.getTime();
         boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
         boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
