@@ -5,7 +5,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -32,6 +31,9 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.motolife.URI.PowerOffController;
+import com.example.motolife.firebase.TopicUtils;
+import com.example.motolife.maputils.UserControlUtils;
 import com.example.motolife.ui.SoundService;
 import com.example.motolife.ui.model.UserLocation;
 import com.example.motolife.ui.model.UserPoke;
@@ -79,6 +81,9 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 import static com.example.motolife.R.string.RIDING_WAKE_LOCK;
+import static com.example.motolife.URI.API.API_GET_LOCATIONS;
+import static com.example.motolife.URI.API.API_GET_UPDATE_USERNAME;
+import static com.example.motolife.URI.API.API_GET_UPDATE_USER_LOCATION;
 import static com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 
@@ -100,8 +105,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private FirebaseAuth firebaseAuth;
 
     private Button logoutButton;
+    private final boolean[] exitAppFlag = new boolean[]{false};
     //    private static final String API_URL = "http://s1.ct8.pl:25500/";
-    private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,8 +148,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private BroadcastReceiver mGpsSwitchStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
-            if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
+            if (Objects.requireNonNull(intent.getAction()).matches("android.location.PROVIDERS_CHANGED")) {
                 checkIfLocalizationIsEnabled();
             }
         }
@@ -190,11 +194,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         @Override
         public void onLocationResult(LocationResult locationResult) {
             List<Location> locationsList = locationResult.getLocations();
-
             if (locationsList.size() > 0) {
                 Location location = locationsList.get(locationsList.size() - 1);
-                LatLng nextLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-
                 mMap.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder()
                         .zoom(mMap.getCameraPosition().zoom)
                         .bearing(mMap.getCameraPosition().bearing)
@@ -258,8 +259,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public void onBackPressed() {
+        PowerOffController.powerOff(exitAppFlag, this);
     }
-
 
     @Override
     protected void onStart() {
@@ -269,8 +270,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         startLocation.addOnSuccessListener(listener -> {
             if (listener != null) {
                 LatLng loc = new LatLng(
-                        startLocation.getResult().getLatitude(),
-                        startLocation.getResult().getLongitude());
+                        Objects.requireNonNull(startLocation.getResult()).getLatitude(),
+                        Objects.requireNonNull(startLocation.getResult()).getLongitude()
+                );
                 mMap.moveCamera(newLatLngZoom(loc, 12.0f));
             }
         });
@@ -286,7 +288,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        Objects.requireNonNull(mapFragment).getMapAsync(this);
         bottomNavBarText = findViewById(R.id.bottomNavBarText);
         bottomBar = findViewById(R.id.map_bottom_nav);
         bottomBar.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
@@ -321,12 +323,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
     private void pokeUser() {
-        RemoteMessage message = new RemoteMessage.Builder("Poke")
-                .addData("New Poke !", "User " + this.globalUsername + " has just Poked you !")
-                .setTtl(3600)
-                .setMessageType("Poke")
-                .build();
-        FirebaseMessaging.getInstance().send(message);
+        UserControlUtils.pokeUser(this.globalUsername);
     }
 
     private String getMarkerUsername(Marker marker) {
@@ -334,49 +331,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
     private void subscribeToTopic(String topic) {
-        FirebaseMessaging.getInstance().subscribeToTopic(topic).addOnCompleteListener(
-                task -> {
-                    String msg = "Subscribed to " + topic + " topic.";
-                    if (!task.isSuccessful())
-                        msg = "Failed to subscribed to " + topic + " topic.";
-                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-                }
-        );
+        Toast.makeText(getApplicationContext(), TopicUtils.subscribeToTopic(topic), Toast.LENGTH_SHORT);
     }
-
-//    public void checkUsername() {
-//        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-//        if (!preferences.contains("username")) {
-//            AlertDialog.Builder usernameDialog = new AlertDialog.Builder(this);
-//            usernameDialog
-//                    .setTitle("Enter your username")
-//                    .setMessage("It is required to show your location on a map.");
-//
-//            final EditText usernameInput = new EditText(this);
-//            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-//                    LinearLayout.LayoutParams.MATCH_PARENT,
-//                    LinearLayout.LayoutParams.MATCH_PARENT,
-//                    LinearLayout.MarginLayoutParams.WRAP_CONTENT);
-//            usernameInput.setLayoutParams(lp);
-//            usernameDialog.setView(usernameInput);
-//            usernameDialog
-//                    .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            SharedPreferences.Editor editor = preferences.edit();
-//                            String username = usernameInput.getText().toString();
-//                            if (!Objects.equals(username, null) && !username.isEmpty()) {
-//                                editor.putString("username", usernameInput.getText().toString());
-//                                editor.apply();
-//                                dialog.dismiss();
-//                            } else {
-//                                usernameInput.setError("Provide your username");
-//                            }
-//                        }
-//                    })
-//                    .show();
-//        }
-//    }
 
     private void checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
@@ -412,7 +368,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private void getUsersLocation(HttpCallback callback) {
         AtomicReference<JSONArray> result = new AtomicReference<>(new JSONArray());
         JsonArrayRequest request = new JsonArrayRequest
-                (Request.Method.GET, API_URL + "getLocations", null, response -> {
+                (Request.Method.GET, API_GET_LOCATIONS, null, response -> {
                     result.set(response);
                     callback.onSuccess(response);
                 },
@@ -453,7 +409,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
         if (!Objects.equals(firebaseUser, null)) {
             StringRequest request = new StringRequest
-                    (Request.Method.GET, API_URL + "updateUserLocation" +
+                    (Request.Method.GET, API_GET_UPDATE_USER_LOCATION +
                             "?email=" + firebaseUser.getEmail() +
                             "&latitude=" + latitude +
                             "&longitude=" + longitude,
@@ -468,7 +424,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private void getUsernameAtStart(HttpCallback callback) {
         StringRequest request = new StringRequest
-                (Request.Method.GET, API_URL + "getUsername?email=" + firebaseUser.getEmail(),
+                (Request.Method.GET, API_GET_UPDATE_USERNAME + "?email=" + firebaseUser.getEmail(),
                         response -> {
                             Log.println(Log.INFO, "RESPONSE SUBSCRIBE: ", response);
                             callback.onSuccessUsernameGet(response);

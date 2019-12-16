@@ -1,15 +1,14 @@
 package com.example.motolife;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.motolife.URI.PowerOffController;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -17,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -27,6 +28,7 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private FirebaseUser user;
     private FirebaseAuth.AuthStateListener authStateListener;
+    private final boolean[] exitAppFlag = new boolean[]{false};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +55,7 @@ public class LoginActivity extends AppCompatActivity {
 
         loginButton.setOnClickListener(click -> {
             if (validateInputs(Arrays.asList(email, password))) {
+                loginButton.setError(null);
                 String emailVal = email.getText().toString();
                 String passwordVal = password.getText().toString();
 
@@ -60,14 +63,15 @@ public class LoginActivity extends AppCompatActivity {
                         LoginActivity.this, task -> {
                             if (!task.isSuccessful()) {
                                 Toast.makeText(getApplicationContext(), "Task unsuccessful :(" + task.getResult(), Toast.LENGTH_LONG).show();
+                                loginButton.setError("Provide proper registration data.");
                             } else {
                                 Toast.makeText(getApplicationContext(), "Task successful :)", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(LoginActivity.this, MapActivity.class));
                             }
                         });
                 Toast.makeText(getApplicationContext(), "Success login !", Toast.LENGTH_SHORT).show();
-            }
-            loginButton.setError("Provide proper registration data.");
+            } else
+                loginButton.setError("Provide proper registration data.");
         });
 
         goToRegisterButton.setOnClickListener(click -> {
@@ -88,5 +92,10 @@ public class LoginActivity extends AppCompatActivity {
             if (Objects.equals(input, null)) flag.set(false);
         });
         return flag.get();
+    }
+
+    @Override
+    public void onBackPressed() {
+        PowerOffController.powerOff(exitAppFlag,this);
     }
 }

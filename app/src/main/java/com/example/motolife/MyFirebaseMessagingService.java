@@ -29,13 +29,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-
-            if (true) {
-                scheduleJob();
-            } else {
-                handleNow();
-            }
-
+            scheduleJob();
         }
 
         if (remoteMessage.getNotification() != null) {
@@ -57,12 +51,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .build();
         WorkManager.getInstance().beginWith(work).enqueue();
     }
-
-
-    private void handleNow() {
-        Log.d(TAG, "Short lived task is done.");
-    }
-
 
     private void sendRegistrationToServer(String token) {
         // TODO: Implement this method to send token to your app server.

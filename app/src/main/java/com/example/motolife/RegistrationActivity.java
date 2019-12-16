@@ -21,6 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import static com.example.motolife.URI.API.API_ADD_USER;
+
 public class RegistrationActivity extends AppCompatActivity {
 
     private EditText username;
@@ -31,7 +33,6 @@ public class RegistrationActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private RequestQueue requestQueue;
     //    private static final String API_URL = "http://s1.ct8.pl:25500/";
-    private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,15 +56,12 @@ public class RegistrationActivity extends AppCompatActivity {
                             } else {
                                 Toast.makeText(getApplicationContext(), "Task successful :)", Toast.LENGTH_SHORT).show();
                                 StringRequest request = new StringRequest(
-                                        Request.Method.GET, API_URL + "addUser" +
+                                        Request.Method.GET, API_ADD_USER +
                                         "?username=" + usernameVal +
                                         "&email=" + emailVal +
                                         "&token=" + firebaseAuth.getUid(),
-                                        response ->
-                                                Log.println(Log.INFO, "RESPONSE", response),
-                                        error -> {
-                                            Toast.makeText(getApplicationContext(), "Cannot update current location : " + error, Toast.LENGTH_LONG).show();
-                                        });
+                                        response -> Log.println(Log.INFO, "RESPONSE", response),
+                                        error -> Toast.makeText(getApplicationContext(), "Cannot update current location : " + error, Toast.LENGTH_LONG).show());
                                 requestQueue.add(request);
                                 startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
                             }
@@ -97,5 +95,10 @@ public class RegistrationActivity extends AppCompatActivity {
                 flag.set(false);
         });
         return flag.get();
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(RegistrationActivity.this,LoginActivity.class));
     }
 }
