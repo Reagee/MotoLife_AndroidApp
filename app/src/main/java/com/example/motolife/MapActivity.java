@@ -1,23 +1,24 @@
 package com.example.motolife;
 
 import android.Manifest;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
-import android.os.Message;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -68,6 +69,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -98,7 +100,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private FirebaseAuth firebaseAuth;
 
     private Button logoutButton;
-//    private static final String API_URL = "http://s1.ct8.pl:25500/";
+    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
     private static final String API_URL = "http://192.168.0.16:8080/";
 
     @Override
@@ -107,6 +109,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         setContentView(R.layout.activity_map);
+        registerReceiver(mGpsSwitchStateReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
 
         String channelId = getString(R.string.default_notification_channel_id);
         String channelName = getString(R.string.default_notification_channel_name);
@@ -125,21 +128,27 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         getUsernameAtStart(this);
 
 //        checkUsername();
-        if (checkLocalizationPersmissions())
-            initializeMap();
+        checkLocalizationPermissions();
+        initializeMap();
     }
 
 
-    private boolean checkLocalizationPersmissions() {
-        while (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+    private void checkLocalizationPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 1
-            );
-        }
-        return true;
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            startActivity(new Intent(MapActivity.this, LocalizationPermissionActivity.class));
     }
+
+    private BroadcastReceiver mGpsSwitchStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (intent.getAction().matches("android.location.PROVIDERS_CHANGED")) {
+                checkIfLocalizationIsEnabled();
+            }
+        }
+    };
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -308,7 +317,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 .addApi(LocationServices.API)
                 .build();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        checkLocalizationPersmissions();
+        checkLocalizationPermissions();
     }
 
     private void pokeUser() {
@@ -368,6 +377,26 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 //                    .show();
 //        }
 //    }
+
+    private void checkIfLocalizationIsEnabled() {
+        LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled;
+        boolean network_enabled;
+
+        gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+
+        if (!gps_enabled && !network_enabled) {
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                    .setMessage(R.string.gps_network_not_enabled)
+                    .setPositiveButton(R.string.open_location_settings, (paramDialogInterface, paramInt) -> getApplicationContext().startActivity(intent))
+                    .setNegativeButton(R.string.Cancel, null)
+                    .show();
+        }
+    }
 
     @Override
     public void onMyLocationClick(Location location) {

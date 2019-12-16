@@ -30,4 +30,8 @@
     <string name="back_to_login">Back to login</string>
     <string name="dont_have_acc">Don\'t have account? Register</string>
     <string name="logout">Logout</string>
+    <string name="localization_permission_info">You have to give the localization permission to keep using MotoLife.</string>
+    <string name="gps_network_not_enabled">GPS is turned off.</string>
+    <string name="open_location_settings">Open location settings</string>
+    <string name="Cancel">Cancel</string>
 </resources>

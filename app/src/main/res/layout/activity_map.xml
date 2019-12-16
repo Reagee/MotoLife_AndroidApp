@@ -19,6 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:textColor="@color/common_google_signin_btn_text_dark_focused"
         android:text="@string/dark_mode_button_text"
 
         map:layout_constraintEnd_toEndOf="parent"

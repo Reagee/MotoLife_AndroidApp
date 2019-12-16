@@ -17,7 +17,8 @@
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".LoginActivity"></activity>
+        <activity android:name=".LocalizationPermissionActivity"></activity>
+        <activity android:name=".LoginActivity" />
         <activity android:name=".RegistrationActivity" />
 
         <meta-data
