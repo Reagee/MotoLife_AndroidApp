@@ -1,4 +1,4 @@
-package com.example.motolife.firebase;
+package com.app.motolife.firebase;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 

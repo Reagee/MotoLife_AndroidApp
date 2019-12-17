@@ -1,4 +1,4 @@
-package com.example.motolife.ui.home;
+package com.app.motolife.ui.home;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

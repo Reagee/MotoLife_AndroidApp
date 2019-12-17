@@ -1,4 +1,4 @@
-package com.example.motolife.ui.model;
+package com.app.motolife.ui.model;
 
 public class UserPoke {
     private String username;

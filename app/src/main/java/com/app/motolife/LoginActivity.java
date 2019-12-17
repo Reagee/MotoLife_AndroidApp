@@ -1,14 +1,14 @@
-package com.example.motolife;
+package com.app.motolife;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.motolife.URI.PowerOffController;
+import com.app.motolife.URI.PowerOffController;
+import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 

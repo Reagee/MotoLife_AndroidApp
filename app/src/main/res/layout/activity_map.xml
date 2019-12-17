@@ -10,7 +10,7 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MapActivity"
+        tools:context="com.app.motolife.MapActivity"
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp" />
 
@@ -19,6 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:padding="5sp"
         android:textColor="@color/common_google_signin_btn_text_dark_focused"
         android:text="@string/dark_mode_button_text"
 
@@ -37,8 +38,7 @@
         android:text="@string/navbar_bottom_username_text"
         android:textAlignment="center"
         android:textColor="@android:color/black"
-        android:textSize="18sp"
-        android:textFontWeight="900"
+        android:textSize="22sp"
         android:visibility="invisible"
         map:layout_constraintBottom_toTopOf="@+id/map_bottom_nav"
         map:layout_constraintEnd_toEndOf="parent"
@@ -55,12 +55,10 @@
 
     <Button
         android:id="@+id/logout"
-        android:layout_width="66dp"
-        android:layout_height="25dp"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
         android:layout_marginTop="16dp"
-        android:background="@color/common_google_signin_btn_text_dark_disabled"
-        android:text="@string/logout"
-        android:textSize="10dp"
+        android:background="@drawable/logout_dark"
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintHorizontal_bias="0.73"
         map:layout_constraintStart_toEndOf="@+id/dark_mode_switch"

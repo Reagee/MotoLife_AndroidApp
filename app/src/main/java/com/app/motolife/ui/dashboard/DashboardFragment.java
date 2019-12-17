@@ -1,4 +1,4 @@
-package com.example.motolife.ui.dashboard;
+package com.app.motolife.ui.dashboard;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

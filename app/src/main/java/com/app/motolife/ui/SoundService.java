@@ -1,4 +1,4 @@
-package com.example.motolife.ui;
+package com.app.motolife.ui;
 
 import android.app.Activity;
 import android.media.MediaPlayer;

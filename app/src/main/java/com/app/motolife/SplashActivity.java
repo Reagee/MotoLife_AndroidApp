@@ -1,7 +1,8 @@
-package com.example.motolife;
+package com.app.motolife;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -9,7 +10,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.motolife.firebase.TokenUtils;
+import com.app.motolife.firebase.TokenUtils;
+import com.example.motolife.R;
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -18,7 +20,7 @@ import java.util.Objects;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import static com.example.motolife.URI.API.API_CHECK;
+import static com.app.motolife.URI.API.API_CHECK;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -81,15 +83,14 @@ public class SplashActivity extends AppCompatActivity {
         runOnUiThread(() -> animatedCircleLoadingView.setPercent(percent));
     }
 
-    private void checkConnection() throws InterruptedException {
-        Thread.sleep(50);
+    private void checkConnection() {
         changePercent(33);
         StringRequest request = new StringRequest
                 (Request.Method.GET, API_CHECK,
                         response -> Toast.makeText(getApplicationContext(), "Connection OK", Toast.LENGTH_SHORT).show(),
                         error -> Toast.makeText(getApplicationContext(), "Error while connecting to server" +
                                 ", error:" + error, Toast.LENGTH_LONG).show());
-        requestQueue.add(request);
+        new Handler().postDelayed(()->requestQueue.add(request),1000);
     }
 
     private void getUserToken() {
@@ -97,14 +98,15 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void getUserAuth() throws InterruptedException {
-        Thread.sleep(50);
-        changePercent(100);
+        changePercent(90);
+        Thread.sleep(500);
         authStateListener = firebaseAuth -> {
             FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
             if (Objects.nonNull(firebaseUser))
-                startActivity(new Intent(SplashActivity.this, MapActivity.class));
+                new Handler().postDelayed(()->startActivity(new Intent(SplashActivity.this, MapActivity.class)),1000);
             else
-                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+                new Handler().postDelayed(()->startActivity(new Intent(SplashActivity.this, LoginActivity.class)),1000);
+            changePercent(100);
         };
     }
 

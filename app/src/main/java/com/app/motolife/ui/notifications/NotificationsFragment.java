@@ -1,4 +1,4 @@
-package com.example.motolife.ui.notifications;
+package com.app.motolife.ui.notifications;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

@@ -1,4 +1,4 @@
-package com.example.motolife;
+package com.app.motolife;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;

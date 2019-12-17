@@ -1,4 +1,4 @@
-package com.example.motolife;
+package com.app.motolife;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,6 +12,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Arrays;
@@ -21,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import static com.example.motolife.URI.API.API_ADD_USER;
+import static com.app.motolife.URI.API.API_ADD_USER;
 
 public class RegistrationActivity extends AppCompatActivity {
 

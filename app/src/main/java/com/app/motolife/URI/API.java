@@ -1,4 +1,4 @@
-package com.example.motolife.URI;
+package com.app.motolife.URI;
 
 public class API {
     public static final String API_URL = "http://192.168.0.16:8080/";

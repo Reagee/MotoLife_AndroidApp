@@ -1,4 +1,4 @@
-package com.example.motolife;
+package com.app.motolife;
 
 import android.Manifest;
 import android.app.NotificationChannel;
@@ -31,12 +31,14 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.motolife.URI.PowerOffController;
-import com.example.motolife.firebase.TopicUtils;
-import com.example.motolife.maputils.UserControlUtils;
-import com.example.motolife.ui.SoundService;
-import com.example.motolife.ui.model.UserLocation;
-import com.example.motolife.ui.model.UserPoke;
+import com.app.motolife.URI.PowerOffController;
+import com.app.motolife.firebase.MyFirebaseMessagingService;
+import com.app.motolife.firebase.TopicUtils;
+import com.app.motolife.maputils.UserControlUtils;
+import com.app.motolife.ui.SoundService;
+import com.app.motolife.ui.model.UserLocation;
+import com.app.motolife.ui.model.UserPoke;
+import com.example.motolife.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -47,6 +49,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -59,7 +62,6 @@ import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -81,9 +83,9 @@ import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 import static com.example.motolife.R.string.RIDING_WAKE_LOCK;
-import static com.example.motolife.URI.API.API_GET_LOCATIONS;
-import static com.example.motolife.URI.API.API_GET_UPDATE_USERNAME;
-import static com.example.motolife.URI.API.API_GET_UPDATE_USER_LOCATION;
+import static com.app.motolife.URI.API.API_GET_LOCATIONS;
+import static com.app.motolife.URI.API.API_GET_UPDATE_USERNAME;
+import static com.app.motolife.URI.API.API_GET_UPDATE_USER_LOCATION;
 import static com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 
@@ -229,30 +231,38 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         logoutButton = findViewById(R.id.logout);
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
                 darkModeSwitch.setTextColor(Color.WHITE);
                 bottomBar.setBackgroundColor(Color.parseColor("#202C38"));
                 bottomBar.setItemTextColor(ColorStateList.valueOf(Color.WHITE));
                 bottomNavBarText.setTextColor(Color.WHITE);
+                logoutButton.setBackground(getDrawable(R.drawable.logout_white));
 
                 GradientDrawable gd = new GradientDrawable();
                 gd.setColor(Color.parseColor("#202C38"));
                 gd.setStroke(1, 0xFF000000);
                 bottomNavBarText.setBackground(gd);
             } else {
-                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
                 darkModeSwitch.setTextColor(Color.BLACK);
                 bottomBar.setBackgroundColor(Color.parseColor("#ffffff"));
                 bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
                 bottomNavBarText.setTextColor(Color.BLACK);
                 bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
+                logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
             }
         });
 
         logoutButton.setOnClickListener(click -> {
-            firebaseAuth.signOut();
-            startActivity(new Intent(MapActivity.this, LoginActivity.class));
-            finish();
+            new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                    .setMessage("Are you sure ?")
+                    .setPositiveButton("Logout", (dialog, which) -> {
+                        firebaseAuth.signOut();
+                        startActivity(new Intent(MapActivity.this,LoginActivity.class));
+                        finish();
+                    })
+                    .setNegativeButton(R.string.Cancel, null)
+                    .show();
         });
     }
 
@@ -400,11 +410,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                         .position(new LatLng(user.getLatitude(), user.getLongitude()))
                         .title(user.getUsername() + " (" + user.getEmail() + ")")
                         .snippet(dateString))
-                        .setIcon(BitmapDescriptorFactory.fromResource(R.drawable.helmet_small));
+                        .setIcon(chooseProperMarkerBg());
             }
         }
     }
 
+    private BitmapDescriptor chooseProperMarkerBg(){
+        return (darkModeSwitch.isChecked())?BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white):
+                BitmapDescriptorFactory.fromResource(R.drawable.helmet_small);
+    }
     private void updateUserLocation(double latitude, double longitude) {
 
         if (!Objects.equals(firebaseUser, null)) {

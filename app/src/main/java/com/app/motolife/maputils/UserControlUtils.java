@@ -1,4 +1,4 @@
-package com.example.motolife.maputils;
+package com.app.motolife.maputils;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;

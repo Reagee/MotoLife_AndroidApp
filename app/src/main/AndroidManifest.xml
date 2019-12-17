@@ -17,9 +17,9 @@
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".LocalizationPermissionActivity"></activity>
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".RegistrationActivity" />
+        <activity android:name="com.app.motolife.LocalizationPermissionActivity"></activity>
+        <activity android:name="com.app.motolife.LoginActivity" />
+        <activity android:name="com.app.motolife.RegistrationActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -44,10 +44,10 @@
             android:value="false" />
 
         <activity
-            android:name=".MapActivity"
+            android:name="com.app.motolife.MapActivity"
             android:label="@string/title_activity_map" />
         <activity
-            android:name=".SplashActivity"
+            android:name="com.app.motolife.SplashActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -57,7 +57,7 @@
         </activity>
 
         <service
-            android:name=".MyFirebaseMessagingService"
+            android:name="com.app.motolife.firebase.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

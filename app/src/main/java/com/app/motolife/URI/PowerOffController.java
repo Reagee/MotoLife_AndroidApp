@@ -1,4 +1,4 @@
-package com.example.motolife.URI;
+package com.app.motolife.URI;
 
 import android.app.Activity;
 import android.content.Intent;

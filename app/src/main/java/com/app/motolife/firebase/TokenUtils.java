@@ -1,14 +1,8 @@
-package com.example.motolife.firebase;
+package com.app.motolife.firebase;
 
-import android.content.Intent;
 import android.util.Log;
 
-import com.example.motolife.LoginActivity;
-import com.example.motolife.MapActivity;
 import com.example.motolife.R;
-import com.example.motolife.SplashActivity;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 
