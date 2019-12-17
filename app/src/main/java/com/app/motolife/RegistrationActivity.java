@@ -12,7 +12,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Arrays;

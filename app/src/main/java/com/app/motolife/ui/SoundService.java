@@ -3,7 +3,7 @@ package com.app.motolife.ui;
 import android.app.Activity;
 import android.media.MediaPlayer;
 
-import com.example.motolife.R;
+import com.app.motolife.R;
 
 public class SoundService {
 

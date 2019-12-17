@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.view.WindowManager;
 import android.widget.Button;
 
-import com.example.motolife.R;
 
 public class LocalizationPermissionActivity extends AppCompatActivity {
 

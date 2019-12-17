@@ -1,8 +1,9 @@
 package com.app.motolife;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -11,14 +12,15 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.app.motolife.firebase.TokenUtils;
-import com.example.motolife.R;
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import static com.app.motolife.URI.API.API_CHECK;
 
@@ -41,14 +43,16 @@ public class SplashActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
+
         startLoading();
-        try {
-            Thread.sleep(1500);
-            checkConnection();
-            getUserAuth();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        startPercentMockThread();
+
+        checkInternetPermissions();
+        checkConnection();
+        //getUserAuth();
+        getUserToken();
+
+
         changeActivity(state);
     }
 
@@ -69,8 +73,6 @@ public class SplashActivity extends AppCompatActivity {
                 for (int i = 0; i <= 100; i++) {
                     Thread.sleep(5);
                     changePercent(i);
-                    if (i == 100)
-                        startActivity(new Intent(SplashActivity.this, MapActivity.class));
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -83,29 +85,42 @@ public class SplashActivity extends AppCompatActivity {
         runOnUiThread(() -> animatedCircleLoadingView.setPercent(percent));
     }
 
+    private void checkInternetPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
+                != PackageManager.PERMISSION_GRANTED)
+            requestPermissions(new String[]{Manifest.permission.INTERNET}, 1);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode != 1) {
+            state = false;
+        }
+    }
+
     private void checkConnection() {
-        changePercent(33);
         StringRequest request = new StringRequest
                 (Request.Method.GET, API_CHECK,
                         response -> Toast.makeText(getApplicationContext(), "Connection OK", Toast.LENGTH_SHORT).show(),
-                        error -> Toast.makeText(getApplicationContext(), "Error while connecting to server" +
-                                ", error:" + error, Toast.LENGTH_LONG).show());
-        new Handler().postDelayed(()->requestQueue.add(request),1000);
+                        error -> {
+                            Toast.makeText(getApplicationContext(), "Error while connecting to server" +
+                                    ", error:" + error, Toast.LENGTH_LONG).show();
+                            state = false;
+                        });
+        requestQueue.add(request);
     }
 
     private void getUserToken() {
         Toast.makeText(this, TokenUtils.getFirebaseToken(), Toast.LENGTH_SHORT).show();
     }
 
-    private void getUserAuth() throws InterruptedException {
-        changePercent(90);
-        Thread.sleep(500);
+    private void getUserAuth() {
         authStateListener = firebaseAuth -> {
             FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-            if (Objects.nonNull(firebaseUser))
-                new Handler().postDelayed(()->startActivity(new Intent(SplashActivity.this, MapActivity.class)),1000);
+            if (Objects.nonNull(firebaseUser) && !Objects.requireNonNull(firebaseUser).getEmail().isEmpty())
+                state = false;
             else
-                new Handler().postDelayed(()->startActivity(new Intent(SplashActivity.this, LoginActivity.class)),1000);
+                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
             changePercent(100);
         };
     }

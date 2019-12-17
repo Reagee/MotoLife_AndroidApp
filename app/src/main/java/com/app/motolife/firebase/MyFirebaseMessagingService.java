@@ -11,7 +11,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.app.motolife.MapActivity;
-import com.example.motolife.R;
+import com.app.motolife.R;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 

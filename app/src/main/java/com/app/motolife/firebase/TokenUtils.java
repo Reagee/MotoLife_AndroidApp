@@ -2,7 +2,7 @@ package com.app.motolife.firebase;
 
 import android.util.Log;
 
-import com.example.motolife.R;
+import com.app.motolife.R;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 
