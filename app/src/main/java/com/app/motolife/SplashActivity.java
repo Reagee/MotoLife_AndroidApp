@@ -1,9 +1,12 @@
 package com.app.motolife;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -18,18 +21,21 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import static com.app.motolife.URI.API.API_CHECK;
 
-public class SplashActivity extends AppCompatActivity {
+public class SplashActivity extends AppCompatActivity implements CheckCallback {
 
     AnimatedCircleLoadingView animatedCircleLoadingView;
     private FirebaseAuth.AuthStateListener authStateListener;
     private FirebaseAuth auth;
     private RequestQueue requestQueue;
-    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
     private boolean state = true;
+    private FirebaseUser firebaseUser;
+    private TextView checkProgress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,23 +44,26 @@ public class SplashActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
         setContentView(R.layout.activity_splash);
+        checkProgress = findViewById(R.id.checkProgressText);
         auth = FirebaseAuth.getInstance();
+
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
+
         startLoading();
-        try {
-            Thread.sleep(1500);
-            checkConnection();
-            getUserAuth();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        changeActivity(state);
+        startPercentMockThread();
+
+        checkInternetPermissions();
+        checkConnection(this);
+        getUserAuth(this);
+        getUserToken(this);
+
+        new Handler().postDelayed(()->changeActivity(this),2000);
     }
 
-    private void changeActivity(boolean state) {
-        if (state)
-            startActivity(new Intent(SplashActivity.this, MapActivity.class));
+    private void changeActivity(CheckCallback checkCallback) {
+        checkProgress.setText("Finalizing...");
+        new Handler().postDelayed(() -> checkCallback.onSuccesCheck(state), 200);
     }
 
 
@@ -69,8 +78,6 @@ public class SplashActivity extends AppCompatActivity {
                 for (int i = 0; i <= 100; i++) {
                     Thread.sleep(5);
                     changePercent(i);
-                    if (i == 100)
-                        startActivity(new Intent(SplashActivity.this, MapActivity.class));
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -83,31 +90,50 @@ public class SplashActivity extends AppCompatActivity {
         runOnUiThread(() -> animatedCircleLoadingView.setPercent(percent));
     }
 
-    private void checkConnection() {
-        changePercent(33);
+    private void checkInternetPermissions() {
+        checkProgress.setText(getString(R.string.check_internet_permissions_text));
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
+                != PackageManager.PERMISSION_GRANTED)
+            new Handler().postDelayed(() -> requestPermissions(new String[]{Manifest.permission.INTERNET}, 1), 200);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode != 1) {
+            state = false;
+        }
+    }
+
+    private void checkConnection(CheckCallback checkCallback) {
+        checkProgress.setText(getString(R.string.checking_api_connection));
         StringRequest request = new StringRequest
                 (Request.Method.GET, API_CHECK,
-                        response -> Toast.makeText(getApplicationContext(), "Connection OK", Toast.LENGTH_SHORT).show(),
-                        error -> Toast.makeText(getApplicationContext(), "Error while connecting to server" +
-                                ", error:" + error, Toast.LENGTH_LONG).show());
-        new Handler().postDelayed(()->requestQueue.add(request),1000);
+                        response -> {
+                            Toast.makeText(getApplicationContext(), "Connection OK", Toast.LENGTH_SHORT).show();
+                            checkCallback.onSuccessAPICheck(response);
+                        },
+                        error -> {
+                            Toast.makeText(getApplicationContext(), "Error while connecting to server" +
+                                    ", error:" + error, Toast.LENGTH_LONG).show();
+                        });
+        new Handler().postDelayed(() -> requestQueue.add(request), 1000);
     }
 
-    private void getUserToken() {
-        Toast.makeText(this, TokenUtils.getFirebaseToken(), Toast.LENGTH_SHORT).show();
+    private void getUserToken(CheckCallback checkCallback) {
+        checkProgress.setText(getString(R.string.getting_user_auth_token));
+        String token = TokenUtils.getFirebaseToken();
+        Toast.makeText(this, token, Toast.LENGTH_SHORT).show();
+        new Handler().postDelayed(() -> checkCallback.onSuccessTokenGet(token), 1000);
     }
 
-    private void getUserAuth() throws InterruptedException {
-        changePercent(90);
-        Thread.sleep(500);
+    private void getUserAuth(CheckCallback checkCallback) {
+        checkProgress.setText(getString(R.string.checking_user_auth));
         authStateListener = firebaseAuth -> {
-            FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-            if (Objects.nonNull(firebaseUser))
-                new Handler().postDelayed(()->startActivity(new Intent(SplashActivity.this, MapActivity.class)),1000);
-            else
-                new Handler().postDelayed(()->startActivity(new Intent(SplashActivity.this, LoginActivity.class)),1000);
-            changePercent(100);
+            firebaseUser = firebaseAuth.getCurrentUser();
+            if (Objects.isNull(firebaseUser) || Objects.requireNonNull(firebaseUser).getEmail().isEmpty())
+                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
         };
+        new Handler().postDelayed(() -> checkCallback.onSuccessAuth(firebaseUser), 1000);
     }
 
     @Override
@@ -115,4 +141,41 @@ public class SplashActivity extends AppCompatActivity {
         super.onStart();
         auth.addAuthStateListener(authStateListener);
     }
+
+    @Override
+    public void onSuccessAPICheck(String response) {
+        if (Objects.isNull(response) || !response.equals("ok"))
+            this.state = false;
+    }
+
+    @Override
+    public void onSuccessTokenGet(String token) {
+        if (Objects.isNull(token) || token.isEmpty())
+            this.state = false;
+    }
+
+
+    @Override
+    public void onSuccessAuth(FirebaseUser firebaseUser) {
+        if (Objects.isNull(firebaseUser))
+            this.state = false;
+    }
+
+    @Override
+    public void onSuccesCheck(boolean state) {
+        if (state)
+            startActivity(new Intent(SplashActivity.this, MapActivity.class));
+        else
+            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+    }
+}
+
+interface CheckCallback {
+    void onSuccessAPICheck(String response);
+
+    void onSuccessTokenGet(String token);
+
+    void onSuccessAuth(FirebaseUser firebaseUser);
+
+    void onSuccesCheck(boolean state);
 }

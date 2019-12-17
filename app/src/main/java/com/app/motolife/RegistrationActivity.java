@@ -46,6 +46,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
         registerButton.setOnClickListener(click -> {
             if (validateInputs(Arrays.asList(username, email, password))) {
+                registerButton.setError(null);
                 String emailVal = email.getText().toString();
                 String usernameVal = username.getText().toString();
                 String passwordVal = password.getText().toString();
@@ -54,6 +55,7 @@ public class RegistrationActivity extends AppCompatActivity {
                         RegistrationActivity.this, task -> {
                             if (!task.isSuccessful()) {
                                 Toast.makeText(getApplicationContext(), "Task unsuccessful :( " + task.getResult(), Toast.LENGTH_SHORT).show();
+                                registerButton.setError("Provide proper registration data.");
                             } else {
                                 Toast.makeText(getApplicationContext(), "Task successful :)", Toast.LENGTH_SHORT).show();
                                 StringRequest request = new StringRequest(
@@ -62,14 +64,14 @@ public class RegistrationActivity extends AppCompatActivity {
                                         "&email=" + emailVal +
                                         "&token=" + firebaseAuth.getUid(),
                                         response -> Log.println(Log.INFO, "RESPONSE", response),
-                                        error -> Toast.makeText(getApplicationContext(), "Cannot update current location : " + error, Toast.LENGTH_LONG).show());
+                                        error -> Toast.makeText(getApplicationContext(), "Cannot add new user : " + error, Toast.LENGTH_LONG).show());
                                 requestQueue.add(request);
                                 startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
                             }
                         });
                 Toast.makeText(getApplicationContext(), "Success registration !", Toast.LENGTH_SHORT).show();
-            }
-            registerButton.setError("Provide proper registration data.");
+            }else
+                registerButton.setError("Provide proper registration data.");
         });
 
         backToLogin.setOnClickListener(click -> {

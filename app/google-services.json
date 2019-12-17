@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "790544914157",
-    "firebase_url": "https://triple-poetry-256216.firebaseio.com",
-    "project_id": "triple-poetry-256216",
-    "storage_bucket": "triple-poetry-256216.appspot.com"
+    "project_number": "475916146070",
+    "firebase_url": "https://motolife-6005b.firebaseio.com",
+    "project_id": "motolife-6005b",
+    "storage_bucket": "motolife-6005b.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:790544914157:android:80a334422e598f2ac85ee4",
+        "mobilesdk_app_id": "1:475916146070:android:e8210a9da2c7a3171279b7",
         "android_client_info": {
           "package_name": "com.app.motolife"
         }
       },
       "oauth_client": [
         {
-          "client_id": "790544914157-f958i8loa2rg3s8rkbhlqcsqn0ojrqrv.apps.googleusercontent.com",
+          "client_id": "475916146070-ne8g0200q1vpj5o0a81aeco9uubmkgsh.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.app.motolife",
@@ -23,20 +23,20 @@
           }
         },
         {
-          "client_id": "790544914157-qnkhdsp1tei4v3kf0erskqf9pjp3v415.apps.googleusercontent.com",
+          "client_id": "475916146070-sh7naq49jkiru3g8pdl1heovvb147u01.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDfPJ1WjKinbwwHE92QeePsx5ORM2l4Eu4"
+          "current_key": "AIzaSyB3y3FZ3Q6Rtks9jdUTOBrOXP9ycTuvMuE"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "790544914157-qnkhdsp1tei4v3kf0erskqf9pjp3v415.apps.googleusercontent.com",
+              "client_id": "475916146070-sh7naq49jkiru3g8pdl1heovvb147u01.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

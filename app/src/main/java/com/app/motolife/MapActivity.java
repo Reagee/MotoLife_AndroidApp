@@ -82,7 +82,6 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
-import static com.example.motolife.R.string.RIDING_WAKE_LOCK;
 import static com.app.motolife.URI.API.API_GET_LOCATIONS;
 import static com.app.motolife.URI.API.API_GET_UPDATE_USERNAME;
 import static com.app.motolife.URI.API.API_GET_UPDATE_USER_LOCATION;
@@ -108,7 +107,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     private Button logoutButton;
     private final boolean[] exitAppFlag = new boolean[]{false};
-    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,7 +127,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock =
-                Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(RIDING_WAKE_LOCK));
+                Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(R.string.RIDING_WAKE_LOCK));
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
         getUsernameAtStart(this);
@@ -230,13 +228,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         darkModeSwitch = findViewById(R.id.dark_mode_switch);
         logoutButton = findViewById(R.id.logout);
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
+            if (!isChecked) {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
-                darkModeSwitch.setTextColor(Color.WHITE);
-                bottomBar.setBackgroundColor(Color.parseColor("#202C38"));
-                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.WHITE));
-                bottomNavBarText.setTextColor(Color.WHITE);
-                logoutButton.setBackground(getDrawable(R.drawable.logout_white));
+                darkModeSwitch.setTextColor(Color.BLACK);
+                bottomBar.setBackgroundColor(Color.parseColor("#ffffff"));
+                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
+                bottomNavBarText.setTextColor(Color.BLACK);
+                bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
+                logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
 
                 GradientDrawable gd = new GradientDrawable();
                 gd.setColor(Color.parseColor("#202C38"));
@@ -244,12 +243,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 bottomNavBarText.setBackground(gd);
             } else {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
-                darkModeSwitch.setTextColor(Color.BLACK);
-                bottomBar.setBackgroundColor(Color.parseColor("#ffffff"));
-                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
-                bottomNavBarText.setTextColor(Color.BLACK);
-                bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
-                logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
+                darkModeSwitch.setTextColor(Color.WHITE);
+                bottomBar.setBackgroundColor(Color.parseColor("#202C38"));
+                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.WHITE));
+                bottomNavBarText.setTextColor(Color.WHITE);
+                bottomNavBarText.setBackgroundColor(Color.parseColor("#202C38"));
+                logoutButton.setBackground(getDrawable(R.drawable.logout_white));
             }
         });
 
@@ -258,7 +257,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     .setMessage("Are you sure ?")
                     .setPositiveButton("Logout", (dialog, which) -> {
                         firebaseAuth.signOut();
-                        startActivity(new Intent(MapActivity.this,LoginActivity.class));
+                        startActivity(new Intent(MapActivity.this, LoginActivity.class));
                         finish();
                     })
                     .setNegativeButton(R.string.Cancel, null)
@@ -415,10 +414,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         }
     }
 
-    private BitmapDescriptor chooseProperMarkerBg(){
-        return (darkModeSwitch.isChecked())?BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white):
+    private BitmapDescriptor chooseProperMarkerBg() {
+        return (darkModeSwitch.isChecked()) ? BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white) :
                 BitmapDescriptorFactory.fromResource(R.drawable.helmet_small);
     }
+
     private void updateUserLocation(double latitude, double longitude) {
 
         if (!Objects.equals(firebaseUser, null)) {

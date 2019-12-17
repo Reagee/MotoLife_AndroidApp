@@ -27,7 +27,6 @@ public class LoginActivity extends AppCompatActivity {
     private Button goToRegisterButton;
     private FirebaseAuth auth;
     private FirebaseUser user;
-    private FirebaseAuth.AuthStateListener authStateListener;
     private final boolean[] exitAppFlag = new boolean[]{false};
 
     @Override
@@ -43,15 +42,6 @@ public class LoginActivity extends AppCompatActivity {
         password = findViewById(R.id.password_login);
         loginButton = findViewById(R.id.login_button);
         goToRegisterButton = findViewById(R.id.go_to_register);
-
-        authStateListener = firebaseAuth -> {
-            FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-            if (Objects.nonNull(firebaseUser)) {
-                if (firebaseUser.getUid().equals(firebaseAuth.getUid()))
-                    startActivity(new Intent(LoginActivity.this, MapActivity.class));
-            } else
-                Toast.makeText(getApplicationContext(), "You have to login", Toast.LENGTH_SHORT).show();
-        };
 
         loginButton.setOnClickListener(click -> {
             if (validateInputs(Arrays.asList(email, password))) {
@@ -77,12 +67,6 @@ public class LoginActivity extends AppCompatActivity {
         goToRegisterButton.setOnClickListener(click -> {
             startActivity(new Intent(LoginActivity.this, RegistrationActivity.class));
         });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        auth.addAuthStateListener(authStateListener);
     }
 
     private boolean validateInputs(List<EditText> inputs) {

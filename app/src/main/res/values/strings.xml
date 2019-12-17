@@ -34,4 +34,9 @@
     <string name="gps_network_not_enabled">GPS is turned off.</string>
     <string name="open_location_settings">Open location settings</string>
     <string name="Cancel">Cancel</string>
+    <string name="default_splash_check_text">Checking connection...</string>
+    <string name="check_internet_permissions_text">Checking internet permissions...</string>
+    <string name="checking_api_connection">Checking connection to server...</string>
+    <string name="checking_user_auth">Checking user authorization...</string>
+    <string name="getting_user_auth_token">Getting user authorization token...</string>
 </resources>
