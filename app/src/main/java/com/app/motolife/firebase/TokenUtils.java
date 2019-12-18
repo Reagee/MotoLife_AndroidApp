@@ -10,11 +10,16 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 
-public class TokenUtils {
-    private static final String TAG = "TokenUtils";
+public class TokenUtils implements TokenCallback {
 
-    public static String getFirebaseToken(){
-        AtomicReference<String> msg = new AtomicReference<>("");
+    private static TokenUtils tokenUtils;
+    private static final String TAG = "TokenUtils";
+    private String token;
+
+    private TokenUtils() {
+    }
+
+    private void getFirebaseToken(TokenCallback callback) {
         FirebaseInstanceId.getInstance().getInstanceId()
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
@@ -22,12 +27,29 @@ public class TokenUtils {
                         return;
                     }
                     String token = Objects.requireNonNull(task.getResult()).getToken();
-
-                    msg.set(R.string.msg_token_fmt+" : "+token);
-                    Log.d(TAG, msg.get());
+                    callback.onSuccessTokenGet(token);
                 });
         FirebaseMessaging.getInstance().setAutoInitEnabled(true);
-        return msg.get();
     }
 
+    public static TokenUtils getInstance() {
+        if (Objects.isNull(tokenUtils))
+            tokenUtils = new TokenUtils();
+        return tokenUtils;
+    }
+
+    public String getFirebaseToken() {
+        if (Objects.isNull(token) || token.isEmpty())
+            getFirebaseToken(this);
+        return this.token;
+    }
+
+    @Override
+    public void onSuccessTokenGet(String token) {
+        this.token = token;
+    }
+}
+
+interface TokenCallback {
+    void onSuccessTokenGet(String token);
 }

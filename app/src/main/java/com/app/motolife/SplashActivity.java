@@ -36,6 +36,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
     private boolean state = true;
     private FirebaseUser firebaseUser;
     private TextView checkProgress;
+    private TokenUtils tokenUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +47,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         setContentView(R.layout.activity_splash);
         checkProgress = findViewById(R.id.checkProgressText);
         auth = FirebaseAuth.getInstance();
+        tokenUtils = TokenUtils.getInstance();
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
@@ -58,12 +60,12 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         getUserAuth(this);
         getUserToken(this);
 
-        new Handler().postDelayed(()->changeActivity(this),2000);
+        new Handler().postDelayed(() -> changeActivity(this), 3000);
     }
 
     private void changeActivity(CheckCallback checkCallback) {
         checkProgress.setText("Finalizing...");
-        new Handler().postDelayed(() -> checkCallback.onSuccesCheck(state), 200);
+        checkCallback.onSuccessCheck(state);
     }
 
 
@@ -116,24 +118,22 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
                             Toast.makeText(getApplicationContext(), "Error while connecting to server" +
                                     ", error:" + error, Toast.LENGTH_LONG).show();
                         });
-        new Handler().postDelayed(() -> requestQueue.add(request), 1000);
+        requestQueue.add(request);
     }
 
     private void getUserToken(CheckCallback checkCallback) {
         checkProgress.setText(getString(R.string.getting_user_auth_token));
-        String token = TokenUtils.getFirebaseToken();
-        Toast.makeText(this, token, Toast.LENGTH_SHORT).show();
-        new Handler().postDelayed(() -> checkCallback.onSuccessTokenGet(token), 1000);
+        String token = tokenUtils.getFirebaseToken();
+        new Handler().postDelayed(()->checkCallback.onSuccessTokenGet(token),1000);
+        System.out.println("!@!@!@@!@!@!!@!@!@!@@!: "+token);
     }
 
     private void getUserAuth(CheckCallback checkCallback) {
         checkProgress.setText(getString(R.string.checking_user_auth));
         authStateListener = firebaseAuth -> {
             firebaseUser = firebaseAuth.getCurrentUser();
-            if (Objects.isNull(firebaseUser) || Objects.requireNonNull(firebaseUser).getEmail().isEmpty())
-                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+            checkCallback.onSuccessAuth(firebaseUser);
         };
-        new Handler().postDelayed(() -> checkCallback.onSuccessAuth(firebaseUser), 1000);
     }
 
     @Override
@@ -157,16 +157,20 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
 
     @Override
     public void onSuccessAuth(FirebaseUser firebaseUser) {
-        if (Objects.isNull(firebaseUser))
+        if (Objects.isNull(firebaseUser)) {
             this.state = false;
+            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+            finish();
+        }
     }
 
     @Override
-    public void onSuccesCheck(boolean state) {
-        if (state)
+    public void onSuccessCheck(boolean state) {
+        if (state) {
             startActivity(new Intent(SplashActivity.this, MapActivity.class));
-        else
+        } else {
             startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+        }
     }
 }
 
@@ -177,5 +181,5 @@ interface CheckCallback {
 
     void onSuccessAuth(FirebaseUser firebaseUser);
 
-    void onSuccesCheck(boolean state);
+    void onSuccessCheck(boolean state);
 }
