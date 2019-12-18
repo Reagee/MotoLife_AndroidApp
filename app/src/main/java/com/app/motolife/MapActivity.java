@@ -237,10 +237,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
                 logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
 
-                GradientDrawable gd = new GradientDrawable();
-                gd.setColor(Color.parseColor("#202C38"));
-                gd.setStroke(1, 0xFF000000);
-                bottomNavBarText.setBackground(gd);
             } else {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
                 darkModeSwitch.setTextColor(Color.WHITE);
@@ -249,6 +245,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 bottomNavBarText.setTextColor(Color.WHITE);
                 bottomNavBarText.setBackgroundColor(Color.parseColor("#202C38"));
                 logoutButton.setBackground(getDrawable(R.drawable.logout_white));
+
+                GradientDrawable gd = new GradientDrawable();
+                gd.setColor(Color.parseColor("#202C38"));
+                gd.setStroke(1, 0xFF000000);
+                bottomNavBarText.setBackground(gd);
             }
         });
 
@@ -440,6 +441,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         StringRequest request = new StringRequest
                 (Request.Method.GET, API_GET_UPDATE_USERNAME + "?email=" + firebaseUser.getEmail(),
                         response -> {
+                            Log.println(Log.INFO, "RESPONSE SUBSCRIBE: ", response);
                             Log.println(Log.INFO, "RESPONSE SUBSCRIBE: ", response);
                             callback.onSuccessUsernameGet(response);
                         },

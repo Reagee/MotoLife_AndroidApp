@@ -37,6 +37,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
     private FirebaseUser firebaseUser;
     private TextView checkProgress;
     private TokenUtils tokenUtils;
+    private int percent = 25;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,13 +48,14 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         setContentView(R.layout.activity_splash);
         checkProgress = findViewById(R.id.checkProgressText);
         auth = FirebaseAuth.getInstance();
-        tokenUtils = TokenUtils.getInstance();
+        tokenUtils = new TokenUtils();
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
 
         startLoading();
         startPercentMockThread();
+
 
         checkInternetPermissions();
         checkConnection(this);
@@ -64,7 +66,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
     }
 
     private void changeActivity(CheckCallback checkCallback) {
-        checkProgress.setText("Finalizing...");
+        checkProgress.setText(getString(R.string.finalizing_text_progress));
         checkCallback.onSuccessCheck(state);
     }
 
@@ -78,7 +80,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
             try {
                 Thread.sleep(1500);
                 for (int i = 0; i <= 100; i++) {
-                    Thread.sleep(5);
+                    Thread.sleep(15);
                     changePercent(i);
                 }
             } catch (InterruptedException e) {
@@ -96,7 +98,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         checkProgress.setText(getString(R.string.check_internet_permissions_text));
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
                 != PackageManager.PERMISSION_GRANTED)
-            new Handler().postDelayed(() -> requestPermissions(new String[]{Manifest.permission.INTERNET}, 1), 200);
+            requestPermissions(new String[]{Manifest.permission.INTERNET}, 1);
     }
 
     @Override
@@ -123,9 +125,8 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
 
     private void getUserToken(CheckCallback checkCallback) {
         checkProgress.setText(getString(R.string.getting_user_auth_token));
-        String token = tokenUtils.getFirebaseToken();
-        new Handler().postDelayed(()->checkCallback.onSuccessTokenGet(token),1000);
-        System.out.println("!@!@!@@!@!@!!@!@!@!@@!: "+token);
+        tokenUtils.getFirebaseToken();
+        new Handler().postDelayed(() -> checkCallback.onSuccessTokenGet(tokenUtils.getFirebaseToken()), 1000);
     }
 
     private void getUserAuth(CheckCallback checkCallback) {
