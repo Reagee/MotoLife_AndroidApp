@@ -9,9 +9,15 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.app.motolife.MapActivity;
 import com.example.motolife.R;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -21,21 +27,23 @@ import androidx.core.app.NotificationCompat;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
+import static com.app.motolife.URI.API.API_SET_USER_TOKEN;
+
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
-        Log.d(TAG, "From: " + remoteMessage.getFrom());
+        Log.println(Log.INFO, "From: ", remoteMessage.getFrom());
 
         if (remoteMessage.getData().size() > 0) {
-            Log.d(TAG, "Message data payload: " + remoteMessage.getData());
+            Log.println(Log.INFO, "Message data payload: ", remoteMessage.getData().toString());
             scheduleJob();
         }
 
         if (remoteMessage.getNotification() != null) {
-            Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
+            Log.println(Log.INFO, "Message Notification Body: ", remoteMessage.getNotification().getBody());
         }
 
         sendNotification(Objects.requireNonNull(remoteMessage.getNotification()).getTitle(),
@@ -44,7 +52,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Override
     public void onNewToken(String token) {
-        Log.d(TAG, "Refreshed token: " + token);
+        Log.println(Log.INFO, "Refreshed token: ", token);
         sendRegistrationToServer(token);
     }
 
@@ -55,7 +63,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void sendRegistrationToServer(String token) {
-        // TODO: Implement this method to send token to your app server.
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        StringRequest request = new StringRequest(
+                Request.Method.GET, API_SET_USER_TOKEN +
+                "?token=" + token +
+                "&email=" + Objects.requireNonNull(firebaseAuth.getCurrentUser()).getEmail(),
+                response -> Log.println(Log.INFO, "New Token Response: ", response),
+                error -> Toast.makeText(this, "Cannot set user token!", Toast.LENGTH_SHORT).show());
+        requestQueue.add(request);
     }
 
 

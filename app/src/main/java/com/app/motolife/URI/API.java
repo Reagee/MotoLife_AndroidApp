@@ -7,6 +7,7 @@ public class API {
     public static final String API_GET_UPDATE_USER_LOCATION = "http://192.168.0.16:8080/updateUserLocation";
     public static final String API_GET_UPDATE_USERNAME = "http://192.168.0.16:8080/getUsername";
     public static final String API_ADD_USER = "http://192.168.0.16:8080/addUser";
+    public static final String API_SET_USER_TOKEN = "http://192.168.0.16:8080/setUserToken";
 
 
 //    public static final String API_URL = "http://s1.ct8.pl:25500/";

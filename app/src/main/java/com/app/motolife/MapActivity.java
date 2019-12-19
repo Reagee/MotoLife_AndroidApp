@@ -37,7 +37,6 @@ import com.app.motolife.firebase.TopicUtils;
 import com.app.motolife.maputils.UserControlUtils;
 import com.app.motolife.ui.SoundService;
 import com.app.motolife.ui.model.UserLocation;
-import com.app.motolife.ui.model.UserPoke;
 import com.example.motolife.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -98,12 +97,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private BottomNavigationView bottomBar;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
-    private UserPoke userPoke;
     private String globalUsername;
     private Marker clickedMarker;
     private TextView bottomNavBarText;
     private FirebaseUser firebaseUser;
     private FirebaseAuth firebaseAuth;
+    private TopicUtils topicUtils;
 
     private Button logoutButton;
     private final boolean[] exitAppFlag = new boolean[]{false};
@@ -341,7 +340,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
     private void subscribeToTopic(String topic) {
-        Toast.makeText(getApplicationContext(), TopicUtils.subscribeToTopic(topic), Toast.LENGTH_SHORT);
+        topicUtils = TopicUtils.getInstance();
+        TopicUtils.subscribeToTopic(topic, topicUtils);
+        Toast.makeText(getApplicationContext(), topicUtils.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     private void checkIfLocalizationIsEnabled() {
@@ -456,10 +457,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         usersLocation = array;
     }
 
-    @Override
-    public void onSuccessPoke(UserPoke userPoke) {
-        this.userPoke = userPoke;
-    }
 
     @Override
     public void onSuccessUsernameGet(String username) {
@@ -484,8 +481,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
 interface HttpCallback {
     void onSuccess(JSONArray array);
-
-    void onSuccessPoke(UserPoke userPoke);
 
     void onSuccessUsernameGet(String username);
 }

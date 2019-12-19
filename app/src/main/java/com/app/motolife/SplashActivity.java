@@ -3,6 +3,7 @@ package com.app.motolife;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.WindowManager;
@@ -20,6 +21,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,7 +39,6 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
     private FirebaseUser firebaseUser;
     private TextView checkProgress;
     private TokenUtils tokenUtils;
-    private int percent = 25;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +57,14 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         startLoading();
         startPercentMockThread();
 
-
-        checkInternetPermissions();
-        checkConnection(this);
-        getUserAuth(this);
-        getUserToken(this);
+        try {
+            checkInternetPermissions();
+            checkConnection(this);
+            getUserAuth(this);
+            getUserToken(this);
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
 
         new Handler().postDelayed(() -> changeActivity(this), 3000);
     }
@@ -123,10 +127,9 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         requestQueue.add(request);
     }
 
-    private void getUserToken(CheckCallback checkCallback) {
+    private void getUserToken(CheckCallback checkCallback) throws ExecutionException, InterruptedException {
         checkProgress.setText(getString(R.string.getting_user_auth_token));
-        tokenUtils.getFirebaseToken();
-        new Handler().postDelayed(() -> checkCallback.onSuccessTokenGet(tokenUtils.getFirebaseToken()), 1000);
+        checkCallback.onSuccessTokenGet(tokenUtils.getFirebaseToken());
     }
 
     private void getUserAuth(CheckCallback checkCallback) {
