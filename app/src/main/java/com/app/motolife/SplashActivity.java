@@ -39,6 +39,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
     private FirebaseUser firebaseUser;
     private TextView checkProgress;
     private TokenUtils tokenUtils;
+    private Thread[] checkers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,13 +58,25 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         startLoading();
         startPercentMockThread();
 
-        try {
-            checkInternetPermissions();
-            checkConnection(this);
-            getUserAuth(this);
-            getUserToken(this);
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
+        checkers = new Thread[4];
+        checkers[0] = new Thread(this::checkInternetPermissions);
+        checkers[1] = new Thread(()->checkConnection(this));
+        checkers[2] = new Thread(()->getUserAuth(this));
+        checkers[3] = new Thread(()-> {
+            try {
+                getUserToken(this);
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        for(Thread t:checkers){
+            try {
+                t.start();
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         new Handler().postDelayed(() -> changeActivity(this), 3000);
@@ -123,6 +136,7 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
                         error -> {
                             Toast.makeText(getApplicationContext(), "Error while connecting to server" +
                                     ", error:" + error, Toast.LENGTH_LONG).show();
+                            state = false;
                         });
         requestQueue.add(request);
     }

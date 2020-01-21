@@ -55,11 +55,10 @@ public class LoginActivity extends AppCompatActivity {
                                 Toast.makeText(getApplicationContext(), "Task unsuccessful :(" + task.getResult(), Toast.LENGTH_LONG).show();
                                 loginButton.setError("Provide proper registration data.");
                             } else {
-                                Toast.makeText(getApplicationContext(), "Task successful :)", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "Success login !", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(LoginActivity.this, MapActivity.class));
                             }
                         });
-                Toast.makeText(getApplicationContext(), "Success login !", Toast.LENGTH_SHORT).show();
             } else
                 loginButton.setError("Provide proper registration data.");
         });

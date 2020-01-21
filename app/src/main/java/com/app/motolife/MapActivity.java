@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
@@ -37,6 +38,7 @@ import com.app.motolife.firebase.TopicUtils;
 import com.app.motolife.maputils.UserControlUtils;
 import com.app.motolife.ui.SoundService;
 import com.app.motolife.ui.model.UserLocation;
+import com.etebarian.meowbottomnavigation.MeowBottomNavigation;
 import com.example.motolife.R;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -44,6 +46,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -57,7 +60,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.bottomnavigation.LabelVisibilityMode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -94,12 +96,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private RequestQueue requestQueue;
     private JSONArray usersLocation;
     private Switch darkModeSwitch;
-    private BottomNavigationView bottomBar;
+    private MeowBottomNavigation meowBottomNavigation;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
     private String globalUsername;
     private Marker clickedMarker;
-    private TextView bottomNavBarText;
+    //    private TextView bottomNavBarText;
     private FirebaseUser firebaseUser;
     private FirebaseAuth firebaseAuth;
     private TopicUtils topicUtils;
@@ -131,7 +133,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         firebaseUser = firebaseAuth.getCurrentUser();
         getUsernameAtStart(this);
 
-//        checkUsername();
         checkLocalizationPermissions();
         initializeMap();
     }
@@ -230,25 +231,21 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             if (!isChecked) {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
                 darkModeSwitch.setTextColor(Color.BLACK);
-                bottomBar.setBackgroundColor(Color.parseColor("#ffffff"));
-                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
-                bottomNavBarText.setTextColor(Color.BLACK);
-                bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
+//                bottomNavBarText.setTextColor(Color.BLACK);
+//                bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
                 logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
 
             } else {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
                 darkModeSwitch.setTextColor(Color.WHITE);
-                bottomBar.setBackgroundColor(Color.parseColor("#202C38"));
-                bottomBar.setItemTextColor(ColorStateList.valueOf(Color.WHITE));
-                bottomNavBarText.setTextColor(Color.WHITE);
-                bottomNavBarText.setBackgroundColor(Color.parseColor("#202C38"));
+//                bottomNavBarText.setTextColor(Color.WHITE);
+//                bottomNavBarText.setBackgroundColor(Color.parseColor("#202C38"));
                 logoutButton.setBackground(getDrawable(R.drawable.logout_white));
 
                 GradientDrawable gd = new GradientDrawable();
                 gd.setColor(Color.parseColor("#202C38"));
                 gd.setStroke(1, 0xFF000000);
-                bottomNavBarText.setBackground(gd);
+//                bottomNavBarText.setBackground(gd);
             }
         });
 
@@ -298,31 +295,56 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         Objects.requireNonNull(mapFragment).getMapAsync(this);
-        bottomNavBarText = findViewById(R.id.bottomNavBarText);
-        bottomBar = findViewById(R.id.map_bottom_nav);
-        bottomBar.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
-        bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
-        bottomBar.setItemHorizontalTranslationEnabled(true);
-        bottomBar.setItemIconTintList(ColorStateList.valueOf(Color.BLACK));
-        bottomBar.setOnNavigationItemSelectedListener(menuItem -> {
-            switch (menuItem.getItemId()) {
-                case R.id.nav_message:
+        meowBottomNavigation = findViewById(R.id.meow_bottom_nav);
+        meowBottomNavigation.add(new MeowBottomNavigation.Model(1, R.drawable.ic_insert_comment_black_24dp));
+        meowBottomNavigation.add(new MeowBottomNavigation.Model(2, R.drawable.ic_child_care_black_24dp));
+        meowBottomNavigation.add(new MeowBottomNavigation.Model(3, R.drawable.ic_close_black_24dp));
+
+        meowBottomNavigation.setOnClickMenuListener(model -> {
+            switch (model.getId()) {
+                case 1:
                     Toast.makeText(getApplicationContext(), "User messaged !", Toast.LENGTH_SHORT).show();
                     break;
-                case R.id.nav_poke:
+                case 2:
                     Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
                     new SoundService(this).makePokeSound();
                     subscribeToTopic(getMarkerUsername(clickedMarker));
                     pokeUser();
                     FirebaseMessaging.getInstance().unsubscribeFromTopic(getMarkerUsername(clickedMarker));
                     break;
-                case R.id.nav_exit:
-                    bottomBar.setVisibility(View.INVISIBLE);
-                    bottomNavBarText.setVisibility(View.INVISIBLE);
+                case 3:
+                    meowBottomNavigation.setVisibility(View.INVISIBLE);
+                    clickedMarker.hideInfoWindow();
+//                    bottomNavBarText.setVisibility(View.INVISIBLE);
                     break;
             }
-            return true;
+            return null;
         });
+//        bottomNavBarText = findViewById(R.id.bottomNavBarText);
+//        bottomBar = findViewById(R.id.map_bottom_nav);
+//        bottomBar.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
+//        bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
+//        bottomBar.setItemHorizontalTranslationEnabled(true);
+//        bottomBar.setItemIconTintList(ColorStateList.valueOf(Color.BLACK));
+//        bottomBar.setOnNavigationItemSelectedListener(menuItem -> {
+//            switch (menuItem.getItemId()) {
+//                case R.id.nav_message:
+//                    Toast.makeText(getApplicationContext(), "User messaged !", Toast.LENGTH_SHORT).show();
+//                    break;
+//                case R.id.nav_poke:
+//                    Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
+//                    new SoundService(this).makePokeSound();
+//                    subscribeToTopic(getMarkerUsername(clickedMarker));
+//                    pokeUser();
+//                    FirebaseMessaging.getInstance().unsubscribeFromTopic(getMarkerUsername(clickedMarker));
+//                    break;
+//                case R.id.nav_exit:
+//                    bottomBar.setVisibility(View.INVISIBLE);
+//                    bottomNavBarText.setVisibility(View.INVISIBLE);
+//                    break;
+//            }
+//            return true;
+//        });
 
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -409,8 +431,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 String dateString = formatter.format(new Date(user.getLast_location_update().getTime()));
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(user.getLatitude(), user.getLongitude()))
-                        .title(user.getUsername() + " (" + user.getEmail() + ")")
-                        .snippet(dateString))
+                        .title(user.getUsername()))
                         .setIcon(chooseProperMarkerBg());
             }
         }
@@ -443,7 +464,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 (Request.Method.GET, API_GET_UPDATE_USERNAME + "?email=" + firebaseUser.getEmail(),
                         response -> {
                             Log.println(Log.INFO, "RESPONSE SUBSCRIBE: ", response);
-                            Log.println(Log.INFO, "RESPONSE SUBSCRIBE: ", response);
                             callback.onSuccessUsernameGet(response);
                         },
                         error -> Toast.makeText(getApplicationContext(),
@@ -471,10 +491,18 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        bottomBar.setVisibility(View.VISIBLE);
-        bottomNavBarText.setVisibility(View.VISIBLE);
-        bottomNavBarText.setText(marker.getTitle());
+        meowBottomNavigation.setVisibility(View.VISIBLE);
+//        bottomNavBarText.setVisibility(View.VISIBLE);
+//        bottomNavBarText.setText(marker.getTitle());
         clickedMarker = marker;
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder()
+                .target(clickedMarker.getPosition())
+                .zoom(mMap.getCameraPosition().zoom)
+                .tilt(mMap.getCameraPosition().tilt)
+                .bearing(mMap.getCameraPosition().bearing)
+                .build()));
+        if (!clickedMarker.isInfoWindowShown())
+            clickedMarker.showInfoWindow();
         return true;
     }
 }

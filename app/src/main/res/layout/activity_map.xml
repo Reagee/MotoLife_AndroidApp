@@ -28,30 +28,47 @@
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/bottomNavBarText"
+<!--    <TextView-->
+<!--        android:id="@+id/bottomNavBarText"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:background="@android:color/white"-->
+<!--        android:gravity="center_vertical|center_horizontal"-->
+<!--        android:padding="5sp"-->
+<!--        android:text="@string/navbar_bottom_username_text"-->
+<!--        android:textAlignment="center"-->
+<!--        android:textColor="@android:color/black"-->
+<!--        android:textSize="22sp"-->
+<!--        android:visibility="invisible"-->
+<!--        map:layout_constraintBottom_toBottomOf="@+id/map"-->
+<!--        map:layout_constraintEnd_toEndOf="parent"-->
+<!--        map:layout_constraintStart_toStartOf="parent" />-->
+
+<!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
+<!--        android:id="@+id/map_bottom_nav"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="100dp"-->
+<!--        android:background="@android:color/white"-->
+<!--        android:visibility="invisible"-->
+<!--        map:layout_constraintBottom_toBottomOf="@+id/map"-->
+<!--        map:menu="@menu/bottom_nav_menu"-->
+<!--        tools:layout_editor_absoluteX="0dp" />-->
+
+    <com.etebarian.meowbottomnavigation.MeowBottomNavigation
+        android:id="@+id/meow_bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:gravity="center_vertical|center_horizontal"
-        android:padding="5sp"
-        android:text="@string/navbar_bottom_username_text"
-        android:textAlignment="center"
-        android:textColor="@android:color/black"
-        android:textSize="22sp"
         android:visibility="invisible"
-        map:layout_constraintBottom_toTopOf="@+id/map_bottom_nav"
-        map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintStart_toStartOf="parent" />
-
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/map_bottom_nav"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        map:layout_constraintBottom_toBottomOf="@+id/map"
-        map:menu="@menu/bottom_nav_menu"
-        android:visibility="invisible"
-        android:background="@android:color/white"/>
+        map:layout_constraintBottom_toBottomOf="parent"
+        map:mbn_backgroundBottomColor="#ffffff"
+        map:mbn_countBackgroundColor="#ff6f00"
+        map:mbn_countTextColor="#ffffff"
+        map:mbn_defaultIconColor="#90a4ae"
+        map:mbn_rippleColor="#2f424242"
+        map:mbn_selectedIconColor="#3c415e"
+        map:mbn_shadowColor="#1f212121"
+        map:layout_constraintCircleRadius="25dp"
+        tools:layout_editor_absoluteX="-47dp" />
 
     <Button
         android:id="@+id/logout"
