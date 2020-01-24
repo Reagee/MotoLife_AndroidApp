@@ -12,6 +12,8 @@ import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.app.motolife.firebase.TokenUtils;
@@ -22,6 +24,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,17 +32,17 @@ import androidx.core.content.ContextCompat;
 
 import static com.app.motolife.URI.API.API_CHECK;
 
-public class SplashActivity extends AppCompatActivity implements CheckCallback {
+public class SplashActivity extends AppCompatActivity implements APICallback {
 
     AnimatedCircleLoadingView animatedCircleLoadingView;
     private FirebaseAuth.AuthStateListener authStateListener;
     private FirebaseAuth auth;
     private RequestQueue requestQueue;
-    private boolean state = true;
+    private boolean connectionFlag = true;
+    private boolean authFlag = true;
     private FirebaseUser firebaseUser;
     private TextView checkProgress;
     private TokenUtils tokenUtils;
-    private Thread[] checkers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,41 +58,37 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
 
+        //starting the animation
         startLoading();
         startPercentMockThread();
 
-        checkers = new Thread[4];
-        checkers[0] = new Thread(this::checkInternetPermissions);
-        checkers[1] = new Thread(()->checkConnection(this));
-        checkers[2] = new Thread(()->getUserAuth(this));
-        checkers[3] = new Thread(()-> {
-            try {
-                getUserToken(this);
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
+//        Thread[] checkers = new Thread[4];
+//        checkers[0] = new Thread(this::checkInternetPermissions);
+//        checkers[1] = new Thread(this::checkConnection);
+//        checkers[2] = new Thread(this::getUserAuth);
+//        checkers[3] = new Thread(this::getUserToken);
+//
+//        for (Thread t : checkers) {
+//            try {
+//                t.start();
+//                t.join();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
-        for(Thread t:checkers){
-            try {
-                t.start();
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        checkInternetPermissions();
+        checkConnection(this);
+        getUserAuth();
+        getUserToken();
 
-        new Handler().postDelayed(() -> changeActivity(this), 3000);
+        new Handler().postDelayed(this::changeActivity, 3000);
     }
 
-    private void changeActivity(CheckCallback checkCallback) {
-        checkProgress.setText(getString(R.string.finalizing_text_progress));
-        checkCallback.onSuccessCheck(state);
-    }
-
-
-    private void startLoading() {
-        animatedCircleLoadingView.startDeterminate();
+    @Override
+    protected void onStart() {
+        super.onStart();
+        auth.addAuthStateListener(authStateListener);
     }
 
     private void startPercentMockThread() {
@@ -111,6 +110,24 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
         runOnUiThread(() -> animatedCircleLoadingView.setPercent(percent));
     }
 
+    private void changeActivity() {
+        checkProgress.setText(getString(R.string.finalizing_text_progress));
+        if (connectionFlag && authFlag) {
+            startActivity(new Intent(SplashActivity.this, MapActivity.class));
+        } else if (!connectionFlag) {
+            Toast.makeText(getApplicationContext(), "Error occurred.", Toast.LENGTH_LONG).show();
+            finish();
+            startActivity(getIntent());
+        } else {
+            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+        }
+    }
+
+
+    private void startLoading() {
+        animatedCircleLoadingView.startDeterminate();
+    }
+
     private void checkInternetPermissions() {
         checkProgress.setText(getString(R.string.check_internet_permissions_text));
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
@@ -121,83 +138,50 @@ public class SplashActivity extends AppCompatActivity implements CheckCallback {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode != 1) {
-            state = false;
+            connectionFlag = false;
         }
     }
 
-    private void checkConnection(CheckCallback checkCallback) {
+    private void checkConnection(APICallback callback) {
         checkProgress.setText(getString(R.string.checking_api_connection));
         StringRequest request = new StringRequest
                 (Request.Method.GET, API_CHECK,
-                        response -> {
-                            Toast.makeText(getApplicationContext(), "Connection OK", Toast.LENGTH_SHORT).show();
-                            checkCallback.onSuccessAPICheck(response);
-                        },
+                        callback::checkAPI,
                         error -> {
-                            Toast.makeText(getApplicationContext(), "Error while connecting to server" +
-                                    ", error:" + error, Toast.LENGTH_LONG).show();
-                            state = false;
+                            this.connectionFlag = false;
                         });
         requestQueue.add(request);
     }
 
-    private void getUserToken(CheckCallback checkCallback) throws ExecutionException, InterruptedException {
+    private void getUserToken() {
         checkProgress.setText(getString(R.string.getting_user_auth_token));
-        checkCallback.onSuccessTokenGet(tokenUtils.getFirebaseToken());
+        String token = null;
+        try {
+            token = tokenUtils.getFirebaseToken();
+        } catch (ExecutionException | InterruptedException e) {
+            this.connectionFlag = false;
+        }
+        if (Objects.isNull(token) || Objects.requireNonNull(token).isEmpty())
+            this.connectionFlag = false;
     }
 
-    private void getUserAuth(CheckCallback checkCallback) {
+    private void getUserAuth() {
         checkProgress.setText(getString(R.string.checking_user_auth));
         authStateListener = firebaseAuth -> {
             firebaseUser = firebaseAuth.getCurrentUser();
-            checkCallback.onSuccessAuth(firebaseUser);
+            if (Objects.isNull(firebaseUser) || Objects.requireNonNull(firebaseUser.getEmail()).isEmpty()) {
+                this.authFlag = false;
+            }
         };
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        auth.addAuthStateListener(authStateListener);
-    }
-
-    @Override
-    public void onSuccessAPICheck(String response) {
-        if (Objects.isNull(response) || !response.equals("ok"))
-            this.state = false;
-    }
-
-    @Override
-    public void onSuccessTokenGet(String token) {
-        if (Objects.isNull(token) || token.isEmpty())
-            this.state = false;
-    }
-
-
-    @Override
-    public void onSuccessAuth(FirebaseUser firebaseUser) {
-        if (Objects.isNull(firebaseUser)) {
-            this.state = false;
-            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
-            finish();
-        }
-    }
-
-    @Override
-    public void onSuccessCheck(boolean state) {
-        if (state) {
-            startActivity(new Intent(SplashActivity.this, MapActivity.class));
-        } else {
-            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
-        }
+    public void checkAPI(String res) {
+        if (!Objects.equals(res, "ok"))
+            this.connectionFlag = false;
     }
 }
 
-interface CheckCallback {
-    void onSuccessAPICheck(String response);
-
-    void onSuccessTokenGet(String token);
-
-    void onSuccessAuth(FirebaseUser firebaseUser);
-
-    void onSuccessCheck(boolean state);
+interface APICallback {
+    void checkAPI(String res);
 }

@@ -3,6 +3,7 @@ package com.app.motolife;
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -109,6 +110,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private Button logoutButton;
     private final boolean[] exitAppFlag = new boolean[]{false};
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,6 +126,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 channelId, channelName, NotificationManager.IMPORTANCE_LOW));
         Intent intent = new Intent(MapActivity.this, MyFirebaseMessagingService.class);
         startService(intent);
+
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
@@ -297,8 +300,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         Objects.requireNonNull(mapFragment).getMapAsync(this);
         meowBottomNavigation = findViewById(R.id.meow_bottom_nav);
         meowBottomNavigation.add(new MeowBottomNavigation.Model(1, R.drawable.ic_insert_comment_black_24dp));
+        Objects.requireNonNull(meowBottomNavigation.getModelById(1)).setCount("Message");
         meowBottomNavigation.add(new MeowBottomNavigation.Model(2, R.drawable.ic_child_care_black_24dp));
+        Objects.requireNonNull(meowBottomNavigation.getModelById(2)).setCount("Poke");
         meowBottomNavigation.add(new MeowBottomNavigation.Model(3, R.drawable.ic_close_black_24dp));
+        Objects.requireNonNull(meowBottomNavigation.getModelById(3)).setCount("Exit");
 
         meowBottomNavigation.setOnClickMenuListener(model -> {
             switch (model.getId()) {
@@ -308,9 +314,9 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 case 2:
                     Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
                     new SoundService(this).makePokeSound();
-                    subscribeToTopic(getMarkerUsername(clickedMarker));
+                    subscribeToTopic(clickedMarker.getTitle());
                     pokeUser();
-                    FirebaseMessaging.getInstance().unsubscribeFromTopic(getMarkerUsername(clickedMarker));
+                    FirebaseMessaging.getInstance().unsubscribeFromTopic(clickedMarker.getTitle());
                     break;
                 case 3:
                     meowBottomNavigation.setVisibility(View.INVISIBLE);
@@ -357,10 +363,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         UserControlUtils.pokeUser(this.globalUsername);
     }
 
-    private String getMarkerUsername(Marker marker) {
-        return marker.getTitle().substring(0, marker.getTitle().indexOf("(") - 1);
-    }
-
     private void subscribeToTopic(String topic) {
         topicUtils = TopicUtils.getInstance();
         TopicUtils.subscribeToTopic(topic, topicUtils);
@@ -385,6 +387,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     .setNegativeButton(R.string.Cancel, null)
                     .show();
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mGpsSwitchStateReceiver != null)
+            unregisterReceiver(mGpsSwitchStateReceiver);
+        super.onDestroy();
     }
 
     @Override

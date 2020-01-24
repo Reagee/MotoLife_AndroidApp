@@ -33,6 +33,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "MyFirebaseMsgService";
 
+
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Log.println(Log.INFO, "From: ", remoteMessage.getFrom());
