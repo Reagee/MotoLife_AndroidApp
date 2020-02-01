@@ -40,4 +40,7 @@
     <string name="checking_user_auth">Checking user authorization...</string>
     <string name="getting_user_auth_token">Getting user authorization token...</string>
     <string name="finalizing_text_progress">Finalizing...</string>
+    <string name="Loading">Loading...</string>
+    <string name="no_gps_signal_logo">No gps signal logo</string>
+    <string name="switch_on_gps">Switch on GPS</string>
 </resources>

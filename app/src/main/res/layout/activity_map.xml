@@ -20,39 +20,112 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:padding="5sp"
-        android:textColor="@color/common_google_signin_btn_text_dark_focused"
         android:text="@string/dark_mode_button_text"
+        android:textColor="@color/common_google_signin_btn_text_dark_focused"
 
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintHorizontal_bias="0.048"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent" />
 
-<!--    <TextView-->
-<!--        android:id="@+id/bottomNavBarText"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:background="@android:color/white"-->
-<!--        android:gravity="center_vertical|center_horizontal"-->
-<!--        android:padding="5sp"-->
-<!--        android:text="@string/navbar_bottom_username_text"-->
-<!--        android:textAlignment="center"-->
-<!--        android:textColor="@android:color/black"-->
-<!--        android:textSize="22sp"-->
-<!--        android:visibility="invisible"-->
-<!--        map:layout_constraintBottom_toBottomOf="@+id/map"-->
-<!--        map:layout_constraintEnd_toEndOf="parent"-->
-<!--        map:layout_constraintStart_toStartOf="parent" />-->
+    <!--    <TextView-->
+    <!--        android:id="@+id/bottomNavBarText"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:background="@android:color/white"-->
+    <!--        android:gravity="center_vertical|center_horizontal"-->
+    <!--        android:padding="5sp"-->
+    <!--        android:text="@string/navbar_bottom_username_text"-->
+    <!--        android:textAlignment="center"-->
+    <!--        android:textColor="@android:color/black"-->
+    <!--        android:textSize="22sp"-->
+    <!--        android:visibility="invisible"-->
+    <!--        map:layout_constraintBottom_toBottomOf="@+id/map"-->
+    <!--        map:layout_constraintEnd_toEndOf="parent"-->
+    <!--        map:layout_constraintStart_toStartOf="parent" />-->
 
-<!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
-<!--        android:id="@+id/map_bottom_nav"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="100dp"-->
-<!--        android:background="@android:color/white"-->
-<!--        android:visibility="invisible"-->
-<!--        map:layout_constraintBottom_toBottomOf="@+id/map"-->
-<!--        map:menu="@menu/bottom_nav_menu"-->
-<!--        tools:layout_editor_absoluteX="0dp" />-->
+    <!--    <com.google.android.material.bottomnavigation.BottomNavigationView-->
+    <!--        android:id="@+id/map_bottom_nav"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="100dp"-->
+    <!--        android:background="@android:color/white"-->
+    <!--        android:visibility="invisible"-->
+    <!--        map:layout_constraintBottom_toBottomOf="@+id/map"-->
+    <!--        map:menu="@menu/bottom_nav_menu"-->
+    <!--        tools:layout_editor_absoluteX="0dp" />-->
+
+    <FrameLayout
+        android:id="@+id/action_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:translationY="35dp"
+        map:layout_constraintBottom_toTopOf="@id/meow_bottom_nav"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintStart_toStartOf="parent">
+
+        <com.github.clans.fab.FloatingActionMenu
+            android:id="@+id/action_menu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            map:menu_animationDelayPerItem="0"
+            map:menu_labels_position="right"
+            map:menu_colorNormal="@color/common_google_signin_btn_text_light_pressed"
+            map:menu_colorPressed="@color/common_google_signin_btn_text_light_pressed"
+            map:menu_colorRipple="@color/common_google_signin_btn_text_dark"
+            map:menu_labels_ellipsize="end"
+            map:menu_labels_maxLines="2">
+
+            <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/add_event_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:alpha="1"
+                map:fab_label="Create new event"
+                android:src="@drawable/event"
+                map:fab_colorNormal="#eeeeee"
+                map:fab_colorPressed="#dddddd"
+                map:fab_colorRipple="#dddddd" />
+
+
+            <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/events_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:alpha="1"
+                map:fab_label="Check events"
+                android:src="@drawable/calendar"
+                map:fab_colorNormal="#eeeeee"
+                map:fab_colorPressed="#dddddd"
+                map:fab_colorRipple="#dddddd" />
+
+
+            <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/messages_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:alpha="1"
+                map:fab_label="Inbox"
+                    android:src="@drawable/ic_insert_comment_black_24dp"
+                map:fab_colorNormal="#eeeeee"
+                map:fab_colorPressed="#dddddd"
+                map:fab_colorRipple="#dddddd" />
+
+        </com.github.clans.fab.FloatingActionMenu>
+
+    </FrameLayout>
+
 
     <com.etebarian.meowbottomnavigation.MeowBottomNavigation
         android:id="@+id/meow_bottom_nav"
@@ -60,6 +133,7 @@
         android:layout_height="wrap_content"
         android:visibility="invisible"
         map:layout_constraintBottom_toBottomOf="parent"
+        map:layout_constraintCircleRadius="25dp"
         map:mbn_backgroundBottomColor="#ffffff"
         map:mbn_countBackgroundColor="#ff6f00"
         map:mbn_countTextColor="#ffffff"
@@ -67,7 +141,6 @@
         map:mbn_rippleColor="#2f424242"
         map:mbn_selectedIconColor="#3c415e"
         map:mbn_shadowColor="#1f212121"
-        map:layout_constraintCircleRadius="25dp"
         tools:layout_editor_absoluteX="-47dp" />
 
     <Button
@@ -80,5 +153,6 @@
         map:layout_constraintHorizontal_bias="0.73"
         map:layout_constraintStart_toEndOf="@+id/dark_mode_switch"
         map:layout_constraintTop_toTopOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

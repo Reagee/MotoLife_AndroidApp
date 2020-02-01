@@ -1,30 +1,33 @@
 package com.app.motolife;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
+import android.content.res.AssetManager;
+import android.graphics.Typeface;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.WindowManager;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.toolbox.RequestFuture;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.app.motolife.firebase.TokenUtils;
 import com.example.motolife.R;
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
+import com.github.ybq.android.spinkit.sprite.Sprite;
+import com.github.ybq.android.spinkit.style.DoubleBounce;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -43,6 +46,7 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
     private FirebaseUser firebaseUser;
     private TextView checkProgress;
     private TokenUtils tokenUtils;
+    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,33 +60,21 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
         tokenUtils = new TokenUtils();
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
-        animatedCircleLoadingView = findViewById(R.id.circle_loading_view);
+        progressBar = findViewById(R.id.spin_kit);
 
         //starting the animation
-        startLoading();
-        startPercentMockThread();
+        Sprite doubleBounce = new DoubleBounce();
+        progressBar.setIndeterminateDrawable(doubleBounce);
 
-//        Thread[] checkers = new Thread[4];
-//        checkers[0] = new Thread(this::checkInternetPermissions);
-//        checkers[1] = new Thread(this::checkConnection);
-//        checkers[2] = new Thread(this::getUserAuth);
-//        checkers[3] = new Thread(this::getUserToken);
-//
-//        for (Thread t : checkers) {
-//            try {
-//                t.start();
-//                t.join();
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
-        checkInternetPermissions();
-        checkConnection(this);
-        getUserAuth();
-        getUserToken();
-
-        new Handler().postDelayed(this::changeActivity, 3000);
+        synchronized (this) {
+            checkProgress.setText(getString(R.string.Loading));
+            checkInternetPermissions();
+            checkConnection(this);
+            getUserAuth();
+            getUserToken();
+            checkIfLocalizationIsEnabled();
+        }
+        new Handler().postDelayed(this::changeActivity, 2000);
     }
 
     @Override
@@ -91,36 +83,22 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
         auth.addAuthStateListener(authStateListener);
     }
 
-    private void startPercentMockThread() {
-        Runnable runnable = () -> {
-            try {
-                Thread.sleep(1500);
-                for (int i = 0; i <= 100; i++) {
-                    Thread.sleep(15);
-                    changePercent(i);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        };
-        new Thread(runnable).start();
-    }
-
-    private void changePercent(final int percent) {
-        runOnUiThread(() -> animatedCircleLoadingView.setPercent(percent));
-    }
 
     private void changeActivity() {
         checkProgress.setText(getString(R.string.finalizing_text_progress));
-        if (connectionFlag && authFlag) {
-            startActivity(new Intent(SplashActivity.this, MapActivity.class));
-        } else if (!connectionFlag) {
-            Toast.makeText(getApplicationContext(), "Error occurred.", Toast.LENGTH_LONG).show();
-            finish();
-            startActivity(getIntent());
-        } else {
-            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
-        }
+        new Handler().postDelayed(() -> {
+            if (connectionFlag && authFlag) {
+                startActivity(new Intent(SplashActivity.this, MapActivity.class));
+            } else if (!connectionFlag) {
+                Toast.makeText(getApplicationContext(), "Error occurred.", Toast.LENGTH_LONG).show();
+                finish();
+                overridePendingTransition(0, 0);
+                startActivity(getIntent());
+                overridePendingTransition(0, 0);
+            } else {
+                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+            }
+        }, 2000);
     }
 
 
@@ -129,10 +107,24 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
     }
 
     private void checkInternetPermissions() {
-        checkProgress.setText(getString(R.string.check_internet_permissions_text));
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
                 != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.INTERNET}, 1);
+    }
+
+    private void checkIfLocalizationIsEnabled() {
+        LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled;
+
+        gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        if (!gps_enabled) {
+            finish();
+            startActivity(new Intent(SplashActivity.this, GpsStatusHandler.class));
+        }
+        else{
+            connectionFlag = true;
+        }
     }
 
     @Override
@@ -143,18 +135,14 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
     }
 
     private void checkConnection(APICallback callback) {
-        checkProgress.setText(getString(R.string.checking_api_connection));
         StringRequest request = new StringRequest
                 (Request.Method.GET, API_CHECK,
                         callback::checkAPI,
-                        error -> {
-                            this.connectionFlag = false;
-                        });
+                        error -> this.connectionFlag = false);
         requestQueue.add(request);
     }
 
     private void getUserToken() {
-        checkProgress.setText(getString(R.string.getting_user_auth_token));
         String token = null;
         try {
             token = tokenUtils.getFirebaseToken();
@@ -166,7 +154,6 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
     }
 
     private void getUserAuth() {
-        checkProgress.setText(getString(R.string.checking_user_auth));
         authStateListener = firebaseAuth -> {
             firebaseUser = firebaseAuth.getCurrentUser();
             if (Objects.isNull(firebaseUser) || Objects.requireNonNull(firebaseUser.getEmail()).isEmpty()) {

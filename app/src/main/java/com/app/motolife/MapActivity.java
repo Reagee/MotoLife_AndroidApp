@@ -3,15 +3,12 @@ package com.app.motolife;
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
@@ -19,13 +16,12 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -41,13 +37,14 @@ import com.app.motolife.ui.SoundService;
 import com.app.motolife.ui.model.UserLocation;
 import com.etebarian.meowbottomnavigation.MeowBottomNavigation;
 import com.example.motolife.R;
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -60,7 +57,6 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -90,7 +86,9 @@ import static com.app.motolife.URI.API.API_GET_UPDATE_USER_LOCATION;
 import static com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 
-public class MapActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener, HttpCallback, GoogleMap.OnMarkerClickListener {
+public class MapActivity extends FragmentActivity
+        implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener,
+        HttpCallback, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
@@ -108,7 +106,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private TopicUtils topicUtils;
 
     private Button logoutButton;
+    private FloatingActionMenu actionMenu;
+    private FloatingActionButton addEvent;
+    private FloatingActionButton checkEvents;
+    private FloatingActionButton viewMessages;
     private final boolean[] exitAppFlag = new boolean[]{false};
+
+    private FrameLayout actionLayout;
 
 
     @Override
@@ -193,6 +197,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         }
     }
 
+
     LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
@@ -229,26 +234,28 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         mMap.setOnMarkerClickListener(this);
 
         darkModeSwitch = findViewById(R.id.dark_mode_switch);
+
+        actionMenu = findViewById(R.id.action_menu);
+        addEvent = findViewById(R.id.add_event_button);
+        checkEvents = findViewById(R.id.events_button);
+        viewMessages = findViewById(R.id.messages_button);
+
         logoutButton = findViewById(R.id.logout);
+        actionLayout = findViewById(R.id.action_layout);
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (!isChecked) {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
                 darkModeSwitch.setTextColor(Color.BLACK);
-//                bottomNavBarText.setTextColor(Color.BLACK);
-//                bottomNavBarText.setBackgroundColor(Color.parseColor("#ffffff"));
                 logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
 
             } else {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
                 darkModeSwitch.setTextColor(Color.WHITE);
-//                bottomNavBarText.setTextColor(Color.WHITE);
-//                bottomNavBarText.setBackgroundColor(Color.parseColor("#202C38"));
                 logoutButton.setBackground(getDrawable(R.drawable.logout_white));
 
                 GradientDrawable gd = new GradientDrawable();
                 gd.setColor(Color.parseColor("#202C38"));
                 gd.setStroke(1, 0xFF000000);
-//                bottomNavBarText.setBackground(gd);
             }
         });
 
@@ -263,6 +270,19 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     .setNegativeButton(R.string.Cancel, null)
                     .show();
         });
+
+        addEvent.setOnClickListener(click -> {
+
+        });
+
+        checkEvents.setOnClickListener(click -> {
+
+        });
+
+        viewMessages.setOnClickListener(click -> {
+
+        });
+
     }
 
 
@@ -320,37 +340,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     break;
                 case 3:
                     meowBottomNavigation.setVisibility(View.INVISIBLE);
+                    meowBottomNavigation.setTranslationY(80.0f);
                     clickedMarker.hideInfoWindow();
-//                    bottomNavBarText.setVisibility(View.INVISIBLE);
                     break;
             }
             return null;
         });
-//        bottomNavBarText = findViewById(R.id.bottomNavBarText);
-//        bottomBar = findViewById(R.id.map_bottom_nav);
-//        bottomBar.setLabelVisibilityMode(LabelVisibilityMode.LABEL_VISIBILITY_LABELED);
-//        bottomBar.setItemTextColor(ColorStateList.valueOf(Color.BLACK));
-//        bottomBar.setItemHorizontalTranslationEnabled(true);
-//        bottomBar.setItemIconTintList(ColorStateList.valueOf(Color.BLACK));
-//        bottomBar.setOnNavigationItemSelectedListener(menuItem -> {
-//            switch (menuItem.getItemId()) {
-//                case R.id.nav_message:
-//                    Toast.makeText(getApplicationContext(), "User messaged !", Toast.LENGTH_SHORT).show();
-//                    break;
-//                case R.id.nav_poke:
-//                    Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
-//                    new SoundService(this).makePokeSound();
-//                    subscribeToTopic(getMarkerUsername(clickedMarker));
-//                    pokeUser();
-//                    FirebaseMessaging.getInstance().unsubscribeFromTopic(getMarkerUsername(clickedMarker));
-//                    break;
-//                case R.id.nav_exit:
-//                    bottomBar.setVisibility(View.INVISIBLE);
-//                    bottomNavBarText.setVisibility(View.INVISIBLE);
-//                    break;
-//            }
-//            return true;
-//        });
 
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -372,20 +367,12 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private void checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled;
-        boolean network_enabled;
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-
-        if (!gps_enabled && !network_enabled) {
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            new AlertDialog.Builder(this, R.style.AlertDialogTheme)
-                    .setMessage(R.string.gps_network_not_enabled)
-                    .setPositiveButton(R.string.open_location_settings, (paramDialogInterface, paramInt) -> getApplicationContext().startActivity(intent))
-                    .setNegativeButton(R.string.Cancel, null)
-                    .show();
+        if (!gps_enabled) {
+            finish();
+            startActivity(new Intent(MapActivity.this, GpsStatusHandler.class));
         }
     }
 
@@ -501,8 +488,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     @Override
     public boolean onMarkerClick(Marker marker) {
         meowBottomNavigation.setVisibility(View.VISIBLE);
-//        bottomNavBarText.setVisibility(View.VISIBLE);
-//        bottomNavBarText.setText(marker.getTitle());
+        meowBottomNavigation.setTranslationY(0);
         clickedMarker = marker;
         mMap.moveCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.builder()
                 .target(clickedMarker.getPosition())
@@ -513,6 +499,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         if (!clickedMarker.isInfoWindowShown())
             clickedMarker.showInfoWindow();
         return true;
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+
     }
 }
 

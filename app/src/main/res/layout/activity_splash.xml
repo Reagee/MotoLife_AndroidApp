@@ -4,73 +4,85 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/splash_gradient"
+    android:background="@color/black"
     tools:context="com.app.motolife.SplashActivity">
 
-    <ImageView
+    <!--    <com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView-->
+    <!--        android:id="@+id/circle_loading_view"-->
+    <!--        android:layout_width="250dp"-->
+    <!--        android:layout_height="250dp"-->
+    <!--        android:layout_centerInParent="true"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:mainColor="#ffffff"-->
+    <!--        app:secondaryColor="#8b0000"-->
+    <!--        app:textColor="#000000" />-->
+
+    <pl.droidsonroids.gif.GifImageView
         android:id="@+id/motoLifeLogo"
-        android:layout_width="316dp"
-        android:layout_height="120dp"
-        android:layout_marginTop="175dp"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:layout_marginTop="92dp"
         android:contentDescription="@string/_desc"
+        android:src="@drawable/motolife_animated"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/moto_line" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/motolife_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:fontFamily="@font/montserrat_subrayada"
+        android:fontFamily="@font/montserrat"
         android:text="@string/motolife"
-        android:textColor="@android:color/black"
-        android:textSize="40sp"
+        android:textColor="#B8761F"
+        android:textSize="42sp"
+        app:layout_constraintTop_toBottomOf="@+id/motoLifeLogo"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintHorizontal_bias="0.486"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/motoLifeLogo" />
+        tools:layout_editor_absoluteY="259dp" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/motolife_motto"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:fontFamily="@font/montserrat_subrayada"
+        android:fontFamily="@font/montserrat"
         android:text="@string/motolife_motto"
-        android:textColor="@android:color/black"
-        android:textSize="15sp"
+        android:textColor="#C8B8761F"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/checkProgressText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/motolife_title"
+        app:layout_constraintVertical_bias="0.039" />
 
-
-    <com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView
-        android:id="@+id/circle_loading_view"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:layout_centerInParent="true"
+    <com.github.ybq.android.spinkit.SpinKitView
+        android:id="@+id/spin_kit"
+        style="@style/SpinKitView.Large.Circle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="75dp"
+        app:SpinKit_Color="#94B8761F"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:mainColor="#ffffff"
-        app:secondaryColor="#8b0000"
-        app:textColor="#000000" />
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/checkProgressText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/montserrat_subrayada"
+        android:fontFamily="@font/montserrat"
         android:padding="5sp"
         android:text="@string/default_splash_check_text"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/circle_loading_view"
+        android:textColor="#DEFFFFFF"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/spin_kit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2"
-        app:layout_constraintVertical_bias="0.137" />
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
