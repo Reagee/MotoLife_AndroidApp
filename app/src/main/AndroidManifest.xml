@@ -18,7 +18,9 @@
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name="com.app.motolife.GpsStatusHandler"/>
+        <activity android:name="com.app.motolife.chat.MessageActivity"></activity>
+        <activity android:name="com.app.motolife.chat.ChatActivity" />
+        <activity android:name="com.app.motolife.GpsStatusHandler" />
         <activity android:name="com.app.motolife.LocalizationPermissionActivity" />
         <activity android:name="com.app.motolife.LoginActivity" />
         <activity android:name="com.app.motolife.RegistrationActivity" />

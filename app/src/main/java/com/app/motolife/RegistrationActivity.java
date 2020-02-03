@@ -14,8 +14,12 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,6 +37,7 @@ public class RegistrationActivity extends AppCompatActivity {
     private Button backToLogin;
     private FirebaseAuth firebaseAuth;
     private RequestQueue requestQueue;
+    private DatabaseReference reference;
     //    private static final String API_URL = "http://s1.ct8.pl:25500/";
 
     @Override
@@ -66,11 +71,27 @@ public class RegistrationActivity extends AppCompatActivity {
                                         response -> Log.println(Log.INFO, "RESPONSE", response),
                                         error -> Toast.makeText(getApplicationContext(), "Cannot add new user : " + error, Toast.LENGTH_LONG).show());
                                 requestQueue.add(request);
-                                startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
+
+                                FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                                String userId = firebaseUser.getUid();
+
+                                reference = FirebaseDatabase.getInstance().getReference("users").child(userId);
+                                HashMap<String, String> userMap = new HashMap<>();
+                                userMap.put("id", userId);
+                                userMap.put("username", usernameVal);
+                                userMap.put("email", emailVal);
+                                userMap.put("imageURL", "default");
+
+                                reference.setValue(userMap).addOnCompleteListener(tsk -> {
+                                    if (tsk.isSuccessful()) {
+                                        startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
+                                        finish();
+                                    }
+                                });
                             }
                         });
                 Toast.makeText(getApplicationContext(), "Success registration !", Toast.LENGTH_SHORT).show();
-            }else
+            } else
                 registerButton.setError("Provide proper registration data.");
         });
 
@@ -102,6 +123,6 @@ public class RegistrationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(RegistrationActivity.this,LoginActivity.class));
+        startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
     }
 }

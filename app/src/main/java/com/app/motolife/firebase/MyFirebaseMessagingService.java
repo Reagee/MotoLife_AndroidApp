@@ -66,13 +66,15 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private void sendRegistrationToServer(String token) {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
         FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
-        StringRequest request = new StringRequest(
-                Request.Method.GET, API_SET_USER_TOKEN +
-                "?token=" + token +
-                "&email=" + Objects.requireNonNull(firebaseAuth.getCurrentUser()).getEmail(),
-                response -> Log.println(Log.INFO, "New Token Response: ", response),
-                error -> Toast.makeText(this, "Cannot set user token!", Toast.LENGTH_SHORT).show());
-        requestQueue.add(request);
+        if (firebaseAuth.getCurrentUser() != null) {
+            StringRequest request = new StringRequest(
+                    Request.Method.GET, API_SET_USER_TOKEN +
+                    "?token=" + token +
+                    "&email=" + firebaseAuth.getCurrentUser().getEmail(),
+                    response -> Log.println(Log.INFO, "New Token Response: ", response),
+                    error -> Toast.makeText(this, "Cannot set user token!", Toast.LENGTH_SHORT).show());
+            requestQueue.add(request);
+        }
     }
 
 

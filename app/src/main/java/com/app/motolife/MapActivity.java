@@ -30,6 +30,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.app.motolife.URI.PowerOffController;
+import com.app.motolife.chat.ChatActivity;
 import com.app.motolife.firebase.MyFirebaseMessagingService;
 import com.app.motolife.firebase.TopicUtils;
 import com.app.motolife.maputils.UserControlUtils;
@@ -280,7 +281,7 @@ public class MapActivity extends FragmentActivity
         });
 
         viewMessages.setOnClickListener(click -> {
-
+             startActivity(new Intent(MapActivity.this, ChatActivity.class).setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP));
         });
 
     }
