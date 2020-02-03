@@ -89,7 +89,7 @@ import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 
 public class MapActivity extends FragmentActivity
         implements OnMapReadyCallback, GoogleMap.OnMyLocationClickListener,
-        HttpCallback, GoogleMap.OnMarkerClickListener, GoogleMap.OnMapLongClickListener {
+        HttpCallback, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
     private GoogleApiClient googleApiClient;
@@ -138,6 +138,7 @@ public class MapActivity extends FragmentActivity
         PowerManager.WakeLock wakeLock =
                 Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(R.string.RIDING_WAKE_LOCK));
         firebaseAuth = FirebaseAuth.getInstance();
+        firebaseAuth.addAuthStateListener(authStateListener);
         firebaseUser = firebaseAuth.getCurrentUser();
         getUsernameAtStart(this);
 
@@ -265,8 +266,6 @@ public class MapActivity extends FragmentActivity
                     .setMessage("Are you sure ?")
                     .setPositiveButton("Logout", (dialog, which) -> {
                         firebaseAuth.signOut();
-                        startActivity(new Intent(MapActivity.this, LoginActivity.class));
-                        finish();
                     })
                     .setNegativeButton(R.string.Cancel, null)
                     .show();
@@ -281,7 +280,7 @@ public class MapActivity extends FragmentActivity
         });
 
         viewMessages.setOnClickListener(click -> {
-             startActivity(new Intent(MapActivity.this, ChatActivity.class).setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP));
+            startActivity(new Intent(MapActivity.this, ChatActivity.class).setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP));
         });
 
     }
@@ -502,10 +501,12 @@ public class MapActivity extends FragmentActivity
         return true;
     }
 
-    @Override
-    public void onMapLongClick(LatLng latLng) {
-
-    }
+    FirebaseAuth.AuthStateListener authStateListener = firebaseAuth -> {
+        if (firebaseAuth.getCurrentUser() == null) {
+            startActivity(new Intent(MapActivity.this, LoginActivity.class));
+            finish();
+        }
+    };
 }
 
 interface HttpCallback {
