@@ -7,7 +7,6 @@
     <string name="motolife">MotoLife</string>
     <string name="motolife_motto">Ride hard or stay home</string>
     <string name="title_activity_map">Map</string>
-    <string name="username">Username</string>
     <string name="RIDING_WAKE_LOCK">RIDING_WAKE_LOCK</string>
     <string name="dark_mode_button_text">Dark mode</string>
     <string name="write_message_to_user">Napisz wiadomość</string>
@@ -51,4 +50,7 @@
     <string name="type_a_message">Type a message...</string>
     <string name="send_message_image_button">send_message_image_button</string>
     <string name="triple_dot">...</string>
+    <string name="username">Username</string>
+    <string name="profile">Profile</string>
+    <string name="search_user">Search user...</string>
 </resources>

@@ -502,9 +502,8 @@ public class MapActivity extends FragmentActivity
     }
 
     FirebaseAuth.AuthStateListener authStateListener = firebaseAuth -> {
-        if (firebaseAuth.getCurrentUser() == null) {
-            startActivity(new Intent(MapActivity.this, LoginActivity.class));
-            finish();
+        if (firebaseAuth.getCurrentUser() == null || firebaseAuth.getCurrentUser().isAnonymous()) {
+            startActivity(new Intent(MapActivity.this, LoginActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
         }
     };
 }
