@@ -119,8 +119,8 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         if (!gps_enabled) {
+            startActivity(new Intent(SplashActivity.this, GpsStatusHandler.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
             finish();
-            startActivity(new Intent(SplashActivity.this, GpsStatusHandler.class));
         }
         else{
             connectionFlag = true;

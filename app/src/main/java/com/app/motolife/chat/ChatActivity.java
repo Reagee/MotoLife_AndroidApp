@@ -68,7 +68,8 @@ public class ChatActivity extends AppCompatActivity {
                 if (user.getImageURL().equals("default")) {
                     profile_image.setImageResource(R.drawable.ic_child_care_black_24dp);
                 } else {
-                    Glide.with(ChatActivity.this).load(user.getImageURL()).into(profile_image);
+
+                    Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
                 }
             }
 

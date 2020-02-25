@@ -52,6 +52,8 @@ public class MessageActivity extends AppCompatActivity {
 
     Intent intent;
 
+    ValueEventListener seenListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,8 +87,7 @@ public class MessageActivity extends AppCompatActivity {
             if (!Objects.equals(message_to_send, "")) {
                 sendMessage(firebaseUser.getUid(), userid, msg);
                 message_to_send.setText(null);
-            }
-            else
+            } else
                 Toast.makeText(this, "You can't send empty message", Toast.LENGTH_SHORT).show();
         });
 
@@ -101,9 +102,8 @@ public class MessageActivity extends AppCompatActivity {
                 if (user.getImageURL().equals("default")) {
                     profile_image.setImageResource(R.drawable.ic_child_care_black_24dp);
                 } else {
-                    Glide.with(MessageActivity.this).load(user.getImageURL()).into(profile_image);
+                    Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
                 }
-
                 readMessages(firebaseUser.getUid(), userid, user.getImageURL());
             }
 
@@ -113,14 +113,41 @@ public class MessageActivity extends AppCompatActivity {
             }
         });
 
+        seenMessage(userid);
+
+    }
+
+    private void seenMessage(String userid) {
+        reference = FirebaseDatabase.getInstance().getReference("chat");
+        seenListener = reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Chat chat = snapshot.getValue(Chat.class);
+                    if (chat.getReceiver().equals(firebaseUser.getUid()) &&
+                            chat.getSender().equals(userid)) {
+                        HashMap<String, Object> map = new HashMap<>();
+                        map.put("isseen", true);
+                        snapshot.getRef().updateChildren(map);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void sendMessage(String sender, String receiver, String message) {
+
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
         HashMap<String, Object> messageMap = new HashMap<>();
         messageMap.put("sender", sender);
         messageMap.put("receiver", receiver);
         messageMap.put("message", message);
+        messageMap.put("isseen", false);
 
         reference.child("chat").push().setValue(messageMap);
     }
@@ -170,6 +197,7 @@ public class MessageActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        reference.removeEventListener(seenListener);
         status("offline");
     }
 }
