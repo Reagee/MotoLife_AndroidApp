@@ -18,6 +18,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.app.motolife.Notifications.Token;
 import com.app.motolife.firebase.TokenUtils;
 import com.example.motolife.R;
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
@@ -143,13 +144,13 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
     }
 
     private void getUserToken() {
-        String token = null;
+        Token token = null;
         try {
             token = tokenUtils.getFirebaseToken();
         } catch (ExecutionException | InterruptedException e) {
             this.connectionFlag = false;
         }
-        if (Objects.isNull(token) || Objects.requireNonNull(token).isEmpty())
+        if (Objects.isNull(token) || Objects.requireNonNull(token.getToken()).isEmpty())
             this.connectionFlag = false;
     }
 

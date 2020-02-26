@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.app.motolife.Notifications.Token;
 import com.app.motolife.adapter.UserAdapter;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
@@ -16,6 +17,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,8 +74,15 @@ public class ChatsFragment extends Fragment {
 
             }
         });
+        updateToken(FirebaseInstanceId.getInstance().getToken());
 
         return view;
+    }
+
+    private void updateToken(String newToken){
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("tokens");
+        Token token = new Token(newToken);
+        reference.child(firebaseUser.getUid()).setValue(token);
     }
 
     private void readChats() {
