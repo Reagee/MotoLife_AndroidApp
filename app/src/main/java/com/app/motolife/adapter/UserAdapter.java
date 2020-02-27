@@ -43,8 +43,9 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.user_item, parent, false);
-        return new UserAdapter.ViewHolder(view);
+        return new UserAdapter.ViewHolder(
+                LayoutInflater.from(mContext).inflate(R.layout.user_item, parent, false)
+        );
     }
 
     @Override
@@ -85,8 +86,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView username;
-        public ImageView profile_image;
+        private TextView username;
+        private ImageView profile_image;
         private ImageView image_online;
         private ImageView image_offline;
         private TextView last_msg;
@@ -118,12 +119,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
                     }
                 }
 
-                if ("default".equals(theLastMessage)) {
-                    last_msg.setText("No Message");
-                } else {
-                    last_msg.setText(theLastMessage);
-                }
-
+                last_msg.setText(theLastMessage.equals("default") ? "No Message" : theLastMessage);
                 theLastMessage = "default";
             }
 

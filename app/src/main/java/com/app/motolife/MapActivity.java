@@ -109,19 +109,11 @@ public class MapActivity extends FragmentActivity
 
     private String globalUsername;
     private Marker clickedMarker;
-    //    private TextView bottomNavBarText;
     private FirebaseUser firebaseUser;
     private FirebaseAuth firebaseAuth;
-    private TopicUtils topicUtils;
 
     private Button logoutButton;
-    private FloatingActionMenu actionMenu;
-    private FloatingActionButton addEvent;
-    private FloatingActionButton checkEvents;
-    private FloatingActionButton viewMessages;
     private final boolean[] exitAppFlag = new boolean[]{false};
-
-    private FrameLayout actionLayout;
 
 
     @Override
@@ -247,13 +239,13 @@ public class MapActivity extends FragmentActivity
 
         darkModeSwitch = findViewById(R.id.dark_mode_switch);
 
-        actionMenu = findViewById(R.id.action_menu);
-        addEvent = findViewById(R.id.add_event_button);
-        checkEvents = findViewById(R.id.events_button);
-        viewMessages = findViewById(R.id.messages_button);
+        FloatingActionMenu actionMenu = findViewById(R.id.action_menu);
+        FloatingActionButton addEvent = findViewById(R.id.add_event_button);
+        FloatingActionButton checkEvents = findViewById(R.id.events_button);
+        FloatingActionButton viewMessages = findViewById(R.id.messages_button);
 
         logoutButton = findViewById(R.id.logout);
-        actionLayout = findViewById(R.id.action_layout);
+        FrameLayout actionLayout = findViewById(R.id.action_layout);
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (!isChecked) {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
@@ -369,7 +361,7 @@ public class MapActivity extends FragmentActivity
     }
 
     private void subscribeToTopic(String topic) {
-        topicUtils = TopicUtils.getInstance();
+        TopicUtils topicUtils = TopicUtils.getInstance();
         TopicUtils.subscribeToTopic(topic, topicUtils);
         Toast.makeText(getApplicationContext(), topicUtils.getMessage(), Toast.LENGTH_SHORT).show();
     }
