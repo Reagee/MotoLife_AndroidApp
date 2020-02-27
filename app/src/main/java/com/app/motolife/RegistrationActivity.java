@@ -81,6 +81,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                 userMap.put("username", usernameVal);
                                 userMap.put("email", emailVal);
                                 userMap.put("imageURL", "default");
+                                userMap.put("status", "offline");
 
                                 reference.setValue(userMap).addOnCompleteListener(tsk -> {
                                     if (tsk.isSuccessful()) {

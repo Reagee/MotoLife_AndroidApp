@@ -1,21 +1,21 @@
 package com.app.motolife;
 
 import android.Manifest;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -33,6 +33,7 @@ import com.app.motolife.URI.PowerOffController;
 import com.app.motolife.chat.ChatActivity;
 import com.app.motolife.firebase.MyFirebaseMessagingService;
 import com.app.motolife.firebase.TopicUtils;
+import com.app.motolife.firebase.UserStatus;
 import com.app.motolife.maputils.UserControlUtils;
 import com.app.motolife.ui.SoundService;
 import com.app.motolife.ui.model.UserLocation;
@@ -60,15 +61,23 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.IOException;
+import java.net.URL;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
@@ -80,7 +89,6 @@ import androidx.fragment.app.FragmentActivity;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static android.os.PowerManager.PARTIAL_WAKE_LOCK;
 import static com.app.motolife.URI.API.API_GET_LOCATIONS;
 import static com.app.motolife.URI.API.API_GET_UPDATE_USERNAME;
 import static com.app.motolife.URI.API.API_GET_UPDATE_USER_LOCATION;
@@ -124,19 +132,10 @@ public class MapActivity extends FragmentActivity
         setContentView(R.layout.activity_map);
         registerReceiver(mGpsSwitchStateReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
 
-        String channelId = getString(R.string.default_notification_channel_id);
-        String channelName = getString(R.string.default_notification_channel_name);
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(new NotificationChannel(
-                channelId, channelName, NotificationManager.IMPORTANCE_LOW));
-        Intent intent = new Intent(MapActivity.this, MyFirebaseMessagingService.class);
-        startService(intent);
-
+        Intent intent = new Intent(this, MyFirebaseMessagingService.class);
+        ContextCompat.startForegroundService(this, intent);
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
-        PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wakeLock =
-                Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(R.string.RIDING_WAKE_LOCK));
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseAuth.addAuthStateListener(authStateListener);
         firebaseUser = firebaseAuth.getCurrentUser();
@@ -146,6 +145,17 @@ public class MapActivity extends FragmentActivity
         initializeMap();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        UserStatus.ONLINE();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        UserStatus.OFFLINE();
+    }
 
     private void checkLocalizationPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -425,6 +435,10 @@ public class MapActivity extends FragmentActivity
                 user.setLongitude(Double.parseDouble(usersLocation.getJSONObject(i).get("longitude").toString()));
                 SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm");
                 String dateString = formatter.format(new Date(user.getLast_location_update().getTime()));
+
+                AtomicReference<BitmapDescriptor> markerIcon = new AtomicReference<>();
+                setMarkerIcon(markerIcon);
+
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(user.getLatitude(), user.getLongitude()))
                         .title(user.getUsername()))
@@ -436,6 +450,55 @@ public class MapActivity extends FragmentActivity
     private BitmapDescriptor chooseProperMarkerBg() {
         return (darkModeSwitch.isChecked()) ? BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white) :
                 BitmapDescriptorFactory.fromResource(R.drawable.helmet_small);
+    }
+
+    private void setMarkerIcon(final AtomicReference<BitmapDescriptor> markerIcon) {
+
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid()).child("imageURL");
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String imageURL = dataSnapshot.getValue(String.class);
+                if (!Objects.equals(imageURL, "default")) {
+                    try {
+                        Bitmap bitmap = new UserProfileGetter().execute(imageURL).get();
+                        if (!Objects.equals(bitmap, null))
+                            markerIcon.set(BitmapDescriptorFactory.fromBitmap(bitmap));
+                        else {
+                            markerIcon.set(darkModeSwitch.isChecked() ?
+                                    BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white) :
+                                    BitmapDescriptorFactory.fromResource(R.drawable.helmet_small));
+                        }
+                    } catch (InterruptedException | ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    markerIcon.set(darkModeSwitch.isChecked() ?
+                            BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white) :
+                            BitmapDescriptorFactory.fromResource(R.drawable.helmet_small));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private class UserProfileGetter extends AsyncTask<String, Bitmap, Bitmap> {
+
+        @Override
+        protected Bitmap doInBackground(String... strings) {
+            URL url = null;
+            try {
+                url = new URL(strings[0]);
+                return BitmapFactory.decodeStream(url.openConnection().getInputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
     }
 
     private void updateUserLocation(double latitude, double longitude) {
@@ -502,9 +565,8 @@ public class MapActivity extends FragmentActivity
     }
 
     FirebaseAuth.AuthStateListener authStateListener = firebaseAuth -> {
-        if (firebaseAuth.getCurrentUser() == null) {
-            startActivity(new Intent(MapActivity.this, LoginActivity.class));
-            finish();
+        if (firebaseAuth.getCurrentUser() == null || firebaseAuth.getCurrentUser().isAnonymous()) {
+            startActivity(new Intent(MapActivity.this, LoginActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
         }
     };
 }

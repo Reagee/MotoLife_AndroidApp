@@ -1,13 +1,13 @@
 package com.app.motolife.chat;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
+import com.app.motolife.user.ProfileFragment;
 import com.bumptech.glide.Glide;
 import com.example.motolife.R;
 import com.google.android.material.tabs.TabLayout;
@@ -20,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 import androidx.annotation.NonNull;
@@ -33,12 +34,11 @@ import androidx.viewpager.widget.ViewPager;
 
 public class ChatActivity extends AppCompatActivity {
 
-    ImageView profile_image;
-    TextView username;
+    private ImageView profile_image;
+    private TextView username;
 
-    FirebaseUser firebaseUser;
-    DatabaseReference databaseReference;
-
+    private FirebaseUser firebaseUser;
+    private DatabaseReference databaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,11 +65,12 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 User user = dataSnapshot.getValue(User.class);
-                username.setText(user.getUsername());
+                username.setText(Objects.requireNonNull(user).getUsername());
                 if (user.getImageURL().equals("default")) {
                     profile_image.setImageResource(R.drawable.ic_child_care_black_24dp);
                 } else {
-                    Glide.with(ChatActivity.this).load(user.getImageURL()).into(profile_image);
+
+                    Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
                 }
             }
 
@@ -79,23 +80,48 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-        TabLayout tabLayout = findViewById(R.id.tab_chat_layout);
-        ViewPager viewPager = findViewById(R.id.view_pager);
+        final TabLayout tabLayout = findViewById(R.id.tab_chat_layout);
+        final ViewPager viewPager = findViewById(R.id.view_pager);
 
-        ViewPageAdapter viewPageAdapter = new ViewPageAdapter(getSupportFragmentManager());
-        viewPageAdapter.addFragment(new ChatsFragment(), "Chats");
-        viewPageAdapter.addFragment(new UsersFragment(), "Users");
+        databaseReference = FirebaseDatabase.getInstance().getReference("chat");
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ViewPageAdapter viewPageAdapter = new ViewPageAdapter(getSupportFragmentManager());
+                int unread = 0;
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Chat chat = snapshot.getValue(Chat.class);
+                    if (Objects.requireNonNull(chat).getReceiver().equals(firebaseUser.getUid()) && !chat.isIsseen()) {
+                        unread++;
+                    }
+                }
 
-        viewPager.setAdapter(viewPageAdapter);
-        tabLayout.setupWithViewPager(viewPager);
+                if (unread == 0)
+                    viewPageAdapter.addFragment(new ChatsFragment(), "Chat history");
+                else
+                    viewPageAdapter.addFragment(new ChatsFragment(), "(" + unread + ") Chat history");
+
+                viewPageAdapter.addFragment(new UsersFragment(), "Users");
+                viewPageAdapter.addFragment(new ProfileFragment(), "Profile");
+
+                viewPager.setAdapter(viewPageAdapter);
+                tabLayout.setupWithViewPager(viewPager);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
-    class ViewPageAdapter extends FragmentPagerAdapter{
+    static class ViewPageAdapter extends FragmentPagerAdapter {
 
         private ArrayList<Fragment> fragments;
         private ArrayList<String> titles;
 
-        ViewPageAdapter(FragmentManager fm){
+        ViewPageAdapter(FragmentManager fm) {
             super(fm);
             this.fragments = new ArrayList<>();
             this.titles = new ArrayList<>();
@@ -112,7 +138,7 @@ public class ChatActivity extends AppCompatActivity {
             return fragments.size();
         }
 
-        public void addFragment(Fragment fragment, String title){
+        private void addFragment(Fragment fragment, String title) {
             fragments.add(fragment);
             titles.add(title);
         }
@@ -122,5 +148,26 @@ public class ChatActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             return titles.get(position);
         }
+    }
+
+    private void status(String status) {
+        databaseReference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
+
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("status", status);
+
+        databaseReference.updateChildren(map);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        status("online");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        status("offline");
     }
 }

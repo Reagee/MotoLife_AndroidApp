@@ -14,20 +14,19 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHolder> {
 
-    public static final int MSG_TYPE_LEFT = 0;
-    public static final int MSG_TYPE_RIGHT = 1;
+    private static final int MSG_TYPE_LEFT = 0;
+    private static final int MSG_TYPE_RIGHT = 1;
 
     private Context mContext;
     private List<Chat> mChat;
     private String imageURL;
-
-    FirebaseUser firebaseUser;
 
     public MessageAdapter(Context mContext, List<Chat> mChat, String imageURL) {
         this.mChat = mChat;
@@ -44,7 +43,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         } else {
             view = LayoutInflater.from(mContext).inflate(R.layout.chat_item_left, parent, false);
         }
-        return new MessageAdapter.ViewHolder(view);
+        return new ViewHolder(view);
 
     }
 
@@ -58,6 +57,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         } else {
             Glide.with(mContext).load(imageURL).into(holder.profile_image);
         }
+
+        if (position == mChat.size()-1) {
+            if (chat.isIsseen()) {
+                holder.msg_seen.setText(R.string.seen_info);
+            } else {
+                holder.msg_seen.setText(R.string.delivered_info);
+            }
+        } else {
+            holder.msg_seen.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -65,21 +74,23 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
         return mChat.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView show_message;
-        public ImageView profile_image;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        private TextView show_message;
+        private ImageView profile_image;
+        private TextView msg_seen;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
 
             show_message = itemView.findViewById(R.id.show_message);
             profile_image = itemView.findViewById(R.id.profile_image);
+            msg_seen = itemView.findViewById(R.id.msg_seen);
         }
     }
 
     @Override
     public int getItemViewType(int position) {
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        return mChat.get(position).getSender().equals(firebaseUser.getUid()) ? MSG_TYPE_RIGHT : MSG_TYPE_LEFT;
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        return Objects.equals(mChat.get(position).getSender(), firebaseUser.getUid()) ? MSG_TYPE_RIGHT : MSG_TYPE_LEFT;
     }
 }

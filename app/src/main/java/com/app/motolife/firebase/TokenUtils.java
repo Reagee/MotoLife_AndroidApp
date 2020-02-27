@@ -3,6 +3,7 @@ package com.app.motolife.firebase;
 import android.util.Log;
 
 import com.android.volley.RequestQueue;
+import com.app.motolife.Notifications.Token;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 
@@ -31,8 +32,8 @@ public class TokenUtils implements TokenCallback {
         FirebaseMessaging.getInstance().setAutoInitEnabled(true);
     }
 
-    public String getFirebaseToken() throws ExecutionException, InterruptedException {
-        return (Objects.isNull(token)) ? "User token did not get" : token;
+    public Token getFirebaseToken() throws ExecutionException, InterruptedException {
+        return (Objects.isNull(token)) ? new Token("User token did not get") : new Token(token);
     }
 
     @Override
