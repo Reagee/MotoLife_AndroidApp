@@ -37,14 +37,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
     @NonNull
     @Override
     public MessageAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view;
-        if (viewType == MSG_TYPE_RIGHT) {
-            view = LayoutInflater.from(mContext).inflate(R.layout.chat_item_right, parent, false);
-        } else {
-            view = LayoutInflater.from(mContext).inflate(R.layout.chat_item_left, parent, false);
-        }
-        return new ViewHolder(view);
-
+        return new ViewHolder(
+                viewType == MSG_TYPE_RIGHT
+                        ? LayoutInflater.from(mContext).inflate(R.layout.chat_item_right, parent, false)
+                        : LayoutInflater.from(mContext).inflate(R.layout.chat_item_left, parent, false)
+        );
     }
 
     @Override
@@ -58,15 +55,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.ViewHold
             Glide.with(mContext).load(imageURL).into(holder.profile_image);
         }
 
-        if (position == mChat.size()-1) {
-            if (chat.isIsseen()) {
-                holder.msg_seen.setText(R.string.seen_info);
-            } else {
-                holder.msg_seen.setText(R.string.delivered_info);
-            }
-        } else {
+        if (position == mChat.size() - 1)
+            holder.msg_seen.setText(chat.isIsseen() ? "Seen" : "Delivered");
+        else
             holder.msg_seen.setVisibility(View.GONE);
-        }
+
     }
 
     @Override

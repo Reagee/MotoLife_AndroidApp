@@ -49,7 +49,7 @@ public class ChatActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.chat_toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("");
+        Objects.requireNonNull(getSupportActionBar()).setTitle("");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         toolbar.setNavigationOnClickListener(click -> {
             finish();
@@ -69,7 +69,6 @@ public class ChatActivity extends AppCompatActivity {
                 if (user.getImageURL().equals("default")) {
                     profile_image.setImageResource(R.drawable.ic_child_care_black_24dp);
                 } else {
-
                     Glide.with(getApplicationContext()).load(user.getImageURL()).into(profile_image);
                 }
             }
@@ -96,11 +95,7 @@ public class ChatActivity extends AppCompatActivity {
                     }
                 }
 
-                if (unread == 0)
-                    viewPageAdapter.addFragment(new ChatsFragment(), "Chat history");
-                else
-                    viewPageAdapter.addFragment(new ChatsFragment(), "(" + unread + ") Chat history");
-
+                viewPageAdapter.addFragment(new ChatsFragment(), (unread == 0) ? "Chat history" : "(" + unread + ") Chat history");
                 viewPageAdapter.addFragment(new UsersFragment(), "Users");
                 viewPageAdapter.addFragment(new ProfileFragment(), "Profile");
 
@@ -151,12 +146,10 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void status(String status) {
-        databaseReference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
-
         HashMap<String, Object> map = new HashMap<>();
         map.put("status", status);
 
-        databaseReference.updateChildren(map);
+        FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid()).updateChildren(map);
     }
 
     @Override
