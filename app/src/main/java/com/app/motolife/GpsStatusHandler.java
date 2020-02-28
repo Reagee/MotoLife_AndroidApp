@@ -10,15 +10,13 @@ import android.provider.Settings;
 import android.view.WindowManager;
 import android.widget.Button;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.motolife.R;
 
 import java.util.Objects;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 public class GpsStatusHandler extends AppCompatActivity {
-
-    private Button gpsHandlerButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +25,8 @@ public class GpsStatusHandler extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
-        registerReceiver(mGpsSwitchStateReceiver,new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
-        gpsHandlerButton = findViewById(R.id.gps_handler_button);
+        registerReceiver(mGpsSwitchStateReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
+        Button gpsHandlerButton = findViewById(R.id.gps_handler_button);
 
         gpsHandlerButton.setOnClickListener(click -> {
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
@@ -49,12 +47,10 @@ public class GpsStatusHandler extends AppCompatActivity {
 
     private void checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        boolean gps_enabled;
-
-        gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         if (gps_enabled) {
             finish();
-            startActivity(new Intent(GpsStatusHandler.this, MapActivity.class));
+            startActivity(new Intent(getApplicationContext(), MapActivity.class));
         }
     }
 }

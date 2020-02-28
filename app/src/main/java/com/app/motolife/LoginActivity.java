@@ -7,6 +7,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.app.motolife.URI.PowerOffController;
 import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
@@ -16,8 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -56,7 +56,7 @@ public class LoginActivity extends AppCompatActivity {
                                 loginButton.setError("Provide proper registration data.");
                             } else {
                                 Toast.makeText(getApplicationContext(), "Success login !", Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(LoginActivity.this, MapActivity.class));
+                                startActivity(new Intent(getApplicationContext(), MapActivity.class));
                             }
                         });
             } else
@@ -79,6 +79,6 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        PowerOffController.powerOff(exitAppFlag,this);
+        PowerOffController.powerOff(exitAppFlag, this);
     }
 }

@@ -6,7 +6,8 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
 
 public class UserControlUtils {
-
+    //TODO Poke user implement as done at chat / status notificaiation
+    
     public static void pokeUser(String username){
         RemoteMessage message = new RemoteMessage.Builder("Poke")
                 .addData("New Poke! ", "User " + username + " has just Poked you !")

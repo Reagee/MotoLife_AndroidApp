@@ -38,7 +38,6 @@ public class RegistrationActivity extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private RequestQueue requestQueue;
     private DatabaseReference reference;
-    //    private static final String API_URL = "http://s1.ct8.pl:25500/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +115,7 @@ public class RegistrationActivity extends AppCompatActivity {
         registerButton.setError(null);
         AtomicBoolean flag = new AtomicBoolean(true);
         inputs.forEach(input -> {
-            if (Objects.equals(input, null) || input.getText().toString().isEmpty())
+            if (Objects.isNull(input)|| input.getText().toString().isEmpty())
                 flag.set(false);
         });
         return flag.get();
@@ -124,6 +123,7 @@ public class RegistrationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
+//        startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
+        finish();
     }
 }

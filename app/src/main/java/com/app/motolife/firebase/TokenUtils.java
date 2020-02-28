@@ -2,13 +2,11 @@ package com.app.motolife.firebase;
 
 import android.util.Log;
 
-import com.android.volley.RequestQueue;
 import com.app.motolife.Notifications.Token;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 
 public class TokenUtils implements TokenCallback {
@@ -26,13 +24,13 @@ public class TokenUtils implements TokenCallback {
                 Log.w(TAG, "getInstanceId failed", task.getException());
                 return;
             }
-            String token = Objects.requireNonNull(task.getResult()).getToken();
+            token = Objects.requireNonNull(task.getResult()).getToken();
             callback.onSuccessTokenGet(token);
         });
         FirebaseMessaging.getInstance().setAutoInitEnabled(true);
     }
 
-    public Token getFirebaseToken() throws ExecutionException, InterruptedException {
+    public Token getFirebaseToken() {
         return (Objects.isNull(token)) ? new Token("User token did not get") : new Token(token);
     }
 

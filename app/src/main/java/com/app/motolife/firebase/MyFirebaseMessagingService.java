@@ -14,6 +14,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
@@ -29,9 +32,6 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.Objects;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 
 import static com.app.motolife.URI.API.API_SET_USER_TOKEN;
 
@@ -52,7 +52,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        if (!Objects.equals(firebaseUser, null) && Objects.equals(sent, firebaseUser.getUid())) {
+        if (Objects.equals(firebaseUser.getUid(), sent)) {
             if (!Objects.equals(currentUser, user)) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     sendOreoNotification(remoteMessage);

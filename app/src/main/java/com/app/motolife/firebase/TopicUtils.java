@@ -15,7 +15,7 @@ public class TopicUtils implements SubCallback{
     private TopicUtils(){}
 
     public static void subscribeToTopic(String topic, SubCallback callback){
-        AtomicReference<String> msg = new AtomicReference<>("");
+        AtomicReference<String> msg = new AtomicReference<>();
         FirebaseMessaging.getInstance().subscribeToTopic(topic).addOnCompleteListener(
                 task -> {
                     msg.set("Subscribed to " + topic + " topic.");

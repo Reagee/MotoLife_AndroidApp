@@ -4,21 +4,21 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
-import android.graphics.Typeface;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.app.motolife.Notifications.Token;
 import com.app.motolife.firebase.TokenUtils;
 import com.example.motolife.R;
 import com.github.jlmd.animatedcircleloadingview.AnimatedCircleLoadingView;
@@ -28,23 +28,15 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import static com.app.motolife.URI.API.API_CHECK;
 
 public class SplashActivity extends AppCompatActivity implements APICallback {
 
     AnimatedCircleLoadingView animatedCircleLoadingView;
-    private FirebaseAuth.AuthStateListener authStateListener;
-    private FirebaseAuth auth;
     private RequestQueue requestQueue;
     private boolean connectionFlag = true;
     private boolean authFlag = true;
-    private FirebaseUser firebaseUser;
     private TextView checkProgress;
     private TokenUtils tokenUtils;
     private ProgressBar progressBar;
@@ -57,11 +49,10 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
 
         setContentView(R.layout.activity_splash);
         checkProgress = findViewById(R.id.checkProgressText);
-        auth = FirebaseAuth.getInstance();
-        tokenUtils = new TokenUtils();
-
-        requestQueue = Volley.newRequestQueue(getApplicationContext());
         progressBar = findViewById(R.id.spin_kit);
+
+        tokenUtils = new TokenUtils();
+        requestQueue = Volley.newRequestQueue(getApplicationContext());
 
         //starting the animation
         Sprite doubleBounce = new DoubleBounce();
@@ -69,34 +60,25 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
 
         synchronized (this) {
             checkProgress.setText(getString(R.string.Loading));
-            checkInternetPermissions();
-            checkConnection(this);
-            getUserAuth();
-            getUserToken();
-            checkIfLocalizationIsEnabled();
+            connectionFlag = checkInternetPermissions() &&
+                    checkConnection(this) &&
+                    getUserAuth() &&
+                    getUserToken() &&
+                    checkIfLocalizationIsEnabled();
         }
         new Handler().postDelayed(this::changeActivity, 2000);
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        auth.addAuthStateListener(authStateListener);
-    }
-
 
     private void changeActivity() {
         checkProgress.setText(getString(R.string.finalizing_text_progress));
         new Handler().postDelayed(() -> {
             if (connectionFlag && authFlag) {
-                startActivity(new Intent(SplashActivity.this, MapActivity.class));
+                startActivity(new Intent(getApplicationContext(), MapActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
             } else if (!connectionFlag) {
-                Toast.makeText(getApplicationContext(), "Error occurred.", Toast.LENGTH_LONG).show();
                 finish();
-                overridePendingTransition(0, 0);
                 startActivity(getIntent());
-                overridePendingTransition(0, 0);
             } else {
+                finish();
                 startActivity(new Intent(SplashActivity.this, LoginActivity.class));
             }
         }, 2000);
@@ -107,25 +89,27 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
         animatedCircleLoadingView.startDeterminate();
     }
 
-    private void checkInternetPermissions() {
+    private boolean checkInternetPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET)
-                != PackageManager.PERMISSION_GRANTED)
+                != PackageManager.PERMISSION_GRANTED) {
+            this.connectionFlag = false;
             requestPermissions(new String[]{Manifest.permission.INTERNET}, 1);
+        }
+        return connectionFlag;
     }
 
-    private void checkIfLocalizationIsEnabled() {
+    private boolean checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled;
 
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         if (!gps_enabled) {
+            connectionFlag = false;
             startActivity(new Intent(SplashActivity.this, GpsStatusHandler.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-            finish();
         }
-        else{
-            connectionFlag = true;
-        }
+
+        return connectionFlag;
     }
 
     @Override
@@ -135,32 +119,21 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
         }
     }
 
-    private void checkConnection(APICallback callback) {
+    private boolean checkConnection(APICallback callback) {
         StringRequest request = new StringRequest
                 (Request.Method.GET, API_CHECK,
                         callback::checkAPI,
                         error -> this.connectionFlag = false);
         requestQueue.add(request);
+        return this.connectionFlag;
     }
 
-    private void getUserToken() {
-        Token token = null;
-        try {
-            token = tokenUtils.getFirebaseToken();
-        } catch (ExecutionException | InterruptedException e) {
-            this.connectionFlag = false;
-        }
-        if (Objects.isNull(token) || Objects.requireNonNull(token.getToken()).isEmpty())
-            this.connectionFlag = false;
+    private boolean getUserToken() {
+        return Objects.nonNull(tokenUtils.getFirebaseToken());
     }
 
-    private void getUserAuth() {
-        authStateListener = firebaseAuth -> {
-            firebaseUser = firebaseAuth.getCurrentUser();
-            if (Objects.isNull(firebaseUser) || Objects.requireNonNull(firebaseUser.getEmail()).isEmpty()) {
-                this.authFlag = false;
-            }
-        };
+    private boolean getUserAuth() {
+        return (Objects.nonNull(FirebaseAuth.getInstance().getCurrentUser()));
     }
 
     @Override
