@@ -27,7 +27,6 @@ public class LocalizationPermissionActivity extends AppCompatActivity {
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     1);
         });
-
     }
 
     @Override
