@@ -24,12 +24,6 @@ import android.widget.FrameLayout;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentActivity;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
@@ -77,6 +71,12 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -360,12 +360,10 @@ public class MapActivity extends FragmentActivity
     private void checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled;
-
         gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
 
         if (!gps_enabled) {
-            finish();
-            startActivity(new Intent(MapActivity.this, GpsStatusHandler.class));
+            startActivity(new Intent(MapActivity.this, GpsStatusHandler.class).setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP));
         }
     }
 

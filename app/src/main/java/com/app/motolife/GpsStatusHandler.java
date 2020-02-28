@@ -10,11 +10,11 @@ import android.provider.Settings;
 import android.view.WindowManager;
 import android.widget.Button;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.motolife.R;
 
 import java.util.Objects;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class GpsStatusHandler extends AppCompatActivity {
 
@@ -48,9 +48,30 @@ public class GpsStatusHandler extends AppCompatActivity {
     private void checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        String activity = getIntent().getExtras().getString("activity", "splash");
+
         if (gps_enabled) {
-            finish();
-            startActivity(new Intent(getApplicationContext(), MapActivity.class));
+            if (activity.equals("splash")) {
+                setResult(RESULT_OK);
+                finish();
+                startActivity(new Intent(GpsStatusHandler.this, SplashActivity.class));
+            } else
+                finish();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(LocationManager.KEY_PROVIDER_ENABLED);
+        registerReceiver(mGpsSwitchStateReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mGpsSwitchStateReceiver);
     }
 }
