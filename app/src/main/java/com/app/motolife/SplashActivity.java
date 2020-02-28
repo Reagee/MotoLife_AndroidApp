@@ -54,7 +54,6 @@ public class SplashActivity extends AppCompatActivity implements APICallback {
         tokenUtils = new TokenUtils();
         requestQueue = Volley.newRequestQueue(getApplicationContext());
 
-        //starting the animation
         Sprite doubleBounce = new DoubleBounce();
         progressBar.setIndeterminateDrawable(doubleBounce);
 
