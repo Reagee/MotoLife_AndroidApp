@@ -6,10 +6,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -24,6 +24,9 @@ import com.github.ybq.android.spinkit.style.DoubleBounce;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -64,39 +67,33 @@ public class SplashActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.INTERNET}, 1);
 
-        checkConnection();
-        checkIfLocalizationIsEnabled();
-        getUserAuth();
-        getUserToken();
-
+        new Handler().postDelayed(() -> {
+            checkConnection();
+            checkIfLocalizationIsEnabled();
+            getUserAuth();
+            getUserToken();
+        }, 500);
         changeActivity();
     }
 
     private void changeActivity() {
         checkProgress.setText(getString(R.string.finalizing_text_progress));
-//        for (int i = 0; i < 10; i++) {
-//            if (!Objects.equals(APIResponse,"ok")) {
-//                try {
-//                    Thread.sleep(1000);
-//                    connectionFlag = false;
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            } else {
-//                connectionFlag = true;
-//                break;
-//            }
-//        }
-
-        if (connectionFlag && authFlag) {
-            startActivity(new Intent(getApplicationContext(), MapActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-        } else if (!connectionFlag) {
-            finish();
-            startActivity(getIntent());
-        } else {
-            finish();
-            startActivity(new Intent(SplashActivity.this, LoginActivity.class));
-        }
+        new Handler().postDelayed(() -> {
+            if (connectionFlag && authFlag) {
+                startActivity(new Intent(getApplicationContext(), MapActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            } else if (!connectionFlag) {
+                checkProgress.setText(R.string.connection_error_info_splash);
+                new Handler().postDelayed(() -> {
+                    finish();
+                    overridePendingTransition(0, 0);
+                    startActivity(getIntent());
+                    overridePendingTransition(0, 0);
+                }, 500);
+            } else {
+                finish();
+                startActivity(new Intent(SplashActivity.this, LoginActivity.class));
+            }
+        }, 2000);
     }
 
 
@@ -131,34 +128,38 @@ public class SplashActivity extends AppCompatActivity {
         }
     }
 
+
     private void checkConnection() {
-        RequestFuture<String> result = RequestFuture.newFuture();
-        StringRequest request = new StringRequest
-                (Request.Method.GET, API_CHECK,
-                        this::checkAPI,
-                        error -> {
-                            connectionFlag = false;
-                            APIResponse = "error";
-                            Toast.makeText(getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
-                        });
+        checkProgress.setText(R.string.checkin_connection_info_splash);
+        RequestFuture<String> requestFuture = RequestFuture.newFuture();
+        StringRequest request = new StringRequest(
+                Request.Method.GET,
+                API_CHECK,
+                response -> {
+                    connectionFlag = Objects.equals(response, "ok");
+                    APIResponse = response;
+                },
+                error -> connectionFlag = false);
         requestQueue.add(request);
+
+        try {
+            APIResponse = requestFuture.get(2000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            e.printStackTrace();
+            connectionFlag = false;
+        } finally {
+            if (!Objects.equals(APIResponse, "ok"))
+                connectionFlag = false;
+        }
     }
 
     private void getUserToken() {
-        if (Objects.isNull(tokenUtils.getFirebaseToken()))
-            connectionFlag = false;
+        checkProgress.setText(R.string.geting_user_token_info_splash);
+        connectionFlag = (Objects.nonNull(tokenUtils.getFirebaseToken()));
     }
 
     private void getUserAuth() {
-        if (Objects.isNull(FirebaseAuth.getInstance().getCurrentUser()))
-            authFlag = false;
-    }
-
-    public void checkAPI(String res) {
-        if (!Objects.equals(res, "ok")) {
-            connectionFlag = false;
-            APIResponse = "error";
-            Toast.makeText(getApplicationContext(), "Server connection error!", Toast.LENGTH_SHORT).show();
-        }
+        checkProgress.setText(R.string.checking_auth_info_splash);
+        authFlag = Objects.nonNull(FirebaseAuth.getInstance().getCurrentUser());
     }
 }

@@ -1,6 +1,7 @@
 package com.app.motolife;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -14,6 +15,7 @@ import android.icu.text.SimpleDateFormat;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.util.Log;
@@ -21,7 +23,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -96,7 +98,6 @@ public class MapActivity extends FragmentActivity
     private GoogleApiClient googleApiClient;
     private RequestQueue requestQueue;
     private JSONArray usersLocation;
-    private Switch darkModeSwitch;
     private MeowBottomNavigation meowBottomNavigation;
     private FusedLocationProviderClient fusedLocationProviderClient;
 
@@ -108,6 +109,8 @@ public class MapActivity extends FragmentActivity
     private Button logoutButton;
     private final boolean[] exitAppFlag = new boolean[]{false};
 
+    private boolean darkModeEnabled = false;
+    private TextView infoMessageBox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -228,31 +231,16 @@ public class MapActivity extends FragmentActivity
         mMap.setOnMyLocationClickListener(this);
         mMap.setOnMarkerClickListener(this);
 
-        darkModeSwitch = findViewById(R.id.dark_mode_switch);
 
         FloatingActionMenu actionMenu = findViewById(R.id.action_menu);
         FloatingActionButton addEvent = findViewById(R.id.add_event_button);
         FloatingActionButton checkEvents = findViewById(R.id.events_button);
         FloatingActionButton viewMessages = findViewById(R.id.messages_button);
+        FloatingActionButton darkMode = findViewById(R.id.dark_mode_button);
+        infoMessageBox = findViewById(R.id.error_message_info_box);
 
         logoutButton = findViewById(R.id.logout);
         FrameLayout actionLayout = findViewById(R.id.action_layout);
-        darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (!isChecked) {
-                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
-                darkModeSwitch.setTextColor(Color.BLACK);
-                logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
-
-            } else {
-                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
-                darkModeSwitch.setTextColor(Color.WHITE);
-                logoutButton.setBackground(getDrawable(R.drawable.logout_white));
-
-                GradientDrawable gd = new GradientDrawable();
-                gd.setColor(Color.parseColor("#202C38"));
-                gd.setStroke(1, 0xFF000000);
-            }
-        });
 
         logoutButton.setOnClickListener(click -> {
             new AlertDialog.Builder(this, R.style.AlertDialogTheme)
@@ -262,6 +250,23 @@ public class MapActivity extends FragmentActivity
                     })
                     .setNegativeButton(R.string.Cancel, null)
                     .show();
+        });
+
+        darkMode.setOnClickListener(click -> {
+            if (darkModeEnabled) {
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
+                darkMode.setLabelText("Enable dark mode");
+                logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
+                darkModeEnabled = false;
+            } else {
+                mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
+                darkMode.setLabelText("Disable dark mode");
+                logoutButton.setBackground(getDrawable(R.drawable.logout_white));
+                GradientDrawable gd = new GradientDrawable();
+                gd.setColor(Color.parseColor("#202C38"));
+                gd.setStroke(1, 0xFF000000);
+                darkModeEnabled = true;
+            }
         });
 
         addEvent.setOnClickListener(click -> {
@@ -400,13 +405,18 @@ public class MapActivity extends FragmentActivity
 
     private void getUsersLocation(HttpCallback callback) {
         AtomicReference<JSONArray> result = new AtomicReference<>(new JSONArray());
-        JsonArrayRequest request = new JsonArrayRequest
+        @SuppressLint("SetTextI18n") JsonArrayRequest request = new JsonArrayRequest
                 (Request.Method.GET, API_GET_LOCATIONS, null, response -> {
                     result.set(response);
                     callback.onSuccess(response);
+                    infoMessageBox.setBackgroundResource(R.color.Green);
+                    infoMessageBox.setText(R.string.connection_established);
+                    new Handler().postDelayed(() -> infoMessageBox.setVisibility(View.GONE), 1000);
                 },
                         error -> {
-                            Toast.makeText(getApplicationContext(), "Cannot update users' location :" + error, Toast.LENGTH_LONG).show();
+                            infoMessageBox.setBackgroundResource(R.color.Red);
+                            infoMessageBox.setText(R.string.connection_error);
+                            infoMessageBox.setVisibility(View.VISIBLE);
                         });
         requestQueue.add(request);
     }
@@ -438,7 +448,7 @@ public class MapActivity extends FragmentActivity
     }
 
     private BitmapDescriptor chooseProperMarkerBg() {
-        return (darkModeSwitch.isChecked()) ? BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white) :
+        return (darkModeEnabled) ? BitmapDescriptorFactory.fromResource(R.drawable.helmet_small_white) :
                 BitmapDescriptorFactory.fromResource(R.drawable.helmet_small);
     }
 
@@ -450,10 +460,16 @@ public class MapActivity extends FragmentActivity
                             "?email=" + firebaseUser.getEmail() +
                             "&latitude=" + latitude +
                             "&longitude=" + longitude,
-                            response ->
-                                    Log.println(Log.INFO, "RESPONSE", response),
+                            response -> {
+                                Log.println(Log.INFO, "RESPONSE", response);
+                                infoMessageBox.setBackgroundResource(R.color.Green);
+                                infoMessageBox.setText(R.string.connection_established);
+                                new Handler().postDelayed(() -> infoMessageBox.setVisibility(View.GONE), 1000);
+                            },
                             error -> {
-                                Toast.makeText(getApplicationContext(), "Cannot update current location : " + error, Toast.LENGTH_LONG).show();
+                                infoMessageBox.setBackgroundResource(R.color.Red);
+                                infoMessageBox.setText(R.string.connection_error);
+                                infoMessageBox.setVisibility(View.VISIBLE);
                             });
             requestQueue.add(request);
         }

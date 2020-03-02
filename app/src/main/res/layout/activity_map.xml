@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -14,19 +15,6 @@
         tools:layout_editor_absoluteX="0dp"
         tools:layout_editor_absoluteY="0dp" />
 
-    <Switch
-        android:id="@+id/dark_mode_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:padding="5sp"
-        android:text="@string/dark_mode_button_text"
-        android:textColor="@color/common_google_signin_btn_text_dark_focused"
-
-        map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintHorizontal_bias="0.048"
-        map:layout_constraintStart_toStartOf="parent"
-        map:layout_constraintTop_toTopOf="parent" />
 
     <!--    <TextView-->
     <!--        android:id="@+id/bottomNavBarText"-->
@@ -54,6 +42,22 @@
     <!--        map:menu="@menu/bottom_nav_menu"-->
     <!--        tools:layout_editor_absoluteX="0dp" />-->
 
+    <TextView
+        android:id="@+id/error_message_info_box"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:background="@color/Red"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="@string/connection_error"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintHorizontal_bias="0.0"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintTop_toTopOf="parent" />
+
     <FrameLayout
         android:id="@+id/action_layout"
         android:layout_width="match_parent"
@@ -71,12 +75,26 @@
             android:layout_marginTop="10dp"
             android:layout_marginBottom="10dp"
             map:menu_animationDelayPerItem="0"
-            map:menu_labels_position="right"
             map:menu_colorNormal="@color/common_google_signin_btn_text_light_pressed"
             map:menu_colorPressed="@color/common_google_signin_btn_text_light_pressed"
             map:menu_colorRipple="@color/common_google_signin_btn_text_dark"
             map:menu_labels_ellipsize="end"
-            map:menu_labels_maxLines="2">
+            map:menu_labels_maxLines="2"
+            map:menu_labels_position="right">
+
+            <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/dark_mode_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="8dp"
+                android:alpha="1"
+                android:src="@drawable/moon"
+                map:fab_colorNormal="#eeeeee"
+                map:fab_colorPressed="#dddddd"
+                map:fab_colorRipple="#dddddd"
+                map:fab_label="Enable dark mode" />
 
             <com.github.clans.fab.FloatingActionButton
                 android:id="@+id/add_event_button"
@@ -86,11 +104,11 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginBottom="8dp"
                 android:alpha="1"
-                map:fab_label="Create new event"
                 android:src="@drawable/event"
                 map:fab_colorNormal="#eeeeee"
                 map:fab_colorPressed="#dddddd"
-                map:fab_colorRipple="#dddddd" />
+                map:fab_colorRipple="#dddddd"
+                map:fab_label="Create new event" />
 
 
             <com.github.clans.fab.FloatingActionButton
@@ -101,11 +119,11 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginBottom="8dp"
                 android:alpha="1"
-                map:fab_label="Check events"
                 android:src="@drawable/calendar"
                 map:fab_colorNormal="#eeeeee"
                 map:fab_colorPressed="#dddddd"
-                map:fab_colorRipple="#dddddd" />
+                map:fab_colorRipple="#dddddd"
+                map:fab_label="Check events" />
 
 
             <com.github.clans.fab.FloatingActionButton
@@ -116,11 +134,11 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginBottom="8dp"
                 android:alpha="1"
-                map:fab_label="Inbox"
-                    android:src="@drawable/ic_insert_comment_black_24dp"
+                android:src="@drawable/ic_insert_comment_black_24dp"
                 map:fab_colorNormal="#eeeeee"
                 map:fab_colorPressed="#dddddd"
-                map:fab_colorRipple="#dddddd" />
+                map:fab_colorRipple="#dddddd"
+                map:fab_label="Inbox" />
 
         </com.github.clans.fab.FloatingActionMenu>
 
@@ -147,11 +165,11 @@
         android:id="@+id/logout"
         android:layout_width="35dp"
         android:layout_height="35dp"
-        android:layout_marginTop="16dp"
+        android:layout_margin="10dp"
         android:background="@drawable/logout_dark"
         map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintHorizontal_bias="0.73"
-        map:layout_constraintStart_toEndOf="@+id/dark_mode_switch"
+        map:layout_constraintHorizontal_bias="0.0"
+        map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent" />
 
 

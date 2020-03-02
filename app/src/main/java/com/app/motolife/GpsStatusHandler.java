@@ -74,4 +74,6 @@ public class GpsStatusHandler extends AppCompatActivity {
         super.onPause();
         unregisterReceiver(mGpsSwitchStateReceiver);
     }
+
+
 }

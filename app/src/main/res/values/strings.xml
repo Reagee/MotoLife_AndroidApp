@@ -55,4 +55,10 @@
     <string name="search_user">Search user...</string>
     <string name="seen_info">Seen</string>
     <string name="delivered_info">Delivered</string>
+    <string name="checkin_connection_info_splash">Checking connection...</string>
+    <string name="geting_user_token_info_splash">Getting user token...</string>
+    <string name="checking_auth_info_splash">Checking authorization...</string>
+    <string name="connection_error_info_splash">Connection error, retrying...</string>
+    <string name="connection_error">Connection Error!</string>
+    <string name="connection_established">Connection established!</string>
 </resources>
