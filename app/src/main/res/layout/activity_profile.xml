@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="8dp"
-    tools:context="com.app.motolife.user.ProfileFragment">
+    tools:context="com.app.motolife.user.ProfileActivity">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -14,12 +14,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/profile"
-                android:textColor="@color/Orange"
-                android:textStyle="bold" />
+            <Button
+                android:id="@+id/back_button"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:background="@drawable/back_light"
+                android:layout_margin="10dp"/>
+
+            <Button
+                android:id="@+id/logout_button"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/logout_white"
+                android:layout_margin="10dp"/>
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/profile_image"

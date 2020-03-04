@@ -67,12 +67,12 @@ public class SplashActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.INTERNET}, 1);
 
-        new Handler().postDelayed(() -> {
+        synchronized (this) {
             checkConnection();
             checkIfLocalizationIsEnabled();
             getUserAuth();
             getUserToken();
-        }, 500);
+        }
         changeActivity();
     }
 
@@ -88,7 +88,7 @@ public class SplashActivity extends AppCompatActivity {
                     overridePendingTransition(0, 0);
                     startActivity(getIntent());
                     overridePendingTransition(0, 0);
-                }, 500);
+                }, 2000);
             } else {
                 finish();
                 startActivity(new Intent(SplashActivity.this, LoginActivity.class));

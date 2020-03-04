@@ -7,7 +7,6 @@ import android.widget.TextView;
 
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
-import com.app.motolife.user.ProfileFragment;
 import com.bumptech.glide.Glide;
 import com.example.motolife.R;
 import com.google.android.material.tabs.TabLayout;
@@ -97,7 +96,6 @@ public class ChatActivity extends AppCompatActivity {
 
                 viewPageAdapter.addFragment(new ChatsFragment(), (unread == 0) ? "Chat history" : "(" + unread + ") Chat history");
                 viewPageAdapter.addFragment(new UsersFragment(), "Users");
-                viewPageAdapter.addFragment(new ProfileFragment(), "Profile");
 
                 viewPager.setAdapter(viewPageAdapter);
                 tabLayout.setupWithViewPager(viewPager);

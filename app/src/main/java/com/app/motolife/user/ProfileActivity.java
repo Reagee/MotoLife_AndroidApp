@@ -1,16 +1,17 @@
 package com.app.motolife.user;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.app.motolife.LoginActivity;
 import com.app.motolife.model.User;
 import com.bumptech.glide.Glide;
 import com.example.motolife.R;
@@ -31,39 +32,45 @@ import com.google.firebase.storage.UploadTask;
 
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.Timer;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import static android.app.Activity.RESULT_OK;
-
-public class ProfileFragment extends Fragment {
+public class ProfileActivity extends AppCompatActivity {
 
     private CircleImageView image_profile;
     private TextView username;
 
     private DatabaseReference reference;
     private FirebaseUser firebaseUser;
+    private FirebaseAuth firebaseAuth;
 
     private StorageReference storageReference;
     private static final int IMAGE_REQUEST = 1;
     private Uri imageUri;
     private StorageTask uploadTask;
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_profile, container, false);
+    private Button backButton;
+    private Button logoutButton;
 
-        image_profile = view.findViewById(R.id.profile_image);
-        username = view.findViewById(R.id.username);
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
+        setContentView(R.layout.activity_profile);
+        image_profile = findViewById(R.id.profile_image);
+        username = findViewById(R.id.username);
+        backButton = findViewById(R.id.back_button);
+        logoutButton = findViewById(R.id.logout_button);
 
         storageReference = FirebaseStorage.getInstance().getReference("uploads");
 
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        firebaseAuth = FirebaseAuth.getInstance();
+        firebaseAuth.addAuthStateListener(authStateListener);
+        firebaseUser = firebaseAuth.getCurrentUser();
         reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
 
         reference.addValueEventListener(new ValueEventListener() {
@@ -74,7 +81,7 @@ public class ProfileFragment extends Fragment {
                 if (user.getImageURL().equals("default"))
                     image_profile.setImageResource(R.mipmap.ic_launcher);
                 else
-                    Glide.with(getContext()).load(user.getImageURL()).into(image_profile);
+                    Glide.with(getApplicationContext()).load(user.getImageURL()).into(image_profile);
             }
 
             @Override
@@ -87,7 +94,18 @@ public class ProfileFragment extends Fragment {
             openImage();
         });
 
-        return view;
+        backButton.setOnClickListener(click -> finish());
+
+        logoutButton.setOnClickListener(click -> {
+            new AlertDialog.Builder(this, R.style.AlertDialogTheme)
+                    .setMessage("Are you sure ?")
+                    .setPositiveButton("Logout", (dialog, which) -> {
+                        FirebaseAuth.getInstance().signOut();
+                    })
+                    .setNegativeButton(R.string.Cancel, null)
+                    .show();
+        });
+
     }
 
     private void openImage() {
@@ -99,11 +117,11 @@ public class ProfileFragment extends Fragment {
 
     private String getFileExtension(Uri uri) {
         return MimeTypeMap.getSingleton().getExtensionFromMimeType(
-                Objects.requireNonNull(getContext()).getContentResolver().getType(uri));
+                Objects.requireNonNull(getApplicationContext()).getContentResolver().getType(uri));
     }
 
     private void uploadImage() {
-        final ProgressDialog progressDialog = new ProgressDialog(getContext());
+        final ProgressDialog progressDialog = new ProgressDialog(getApplicationContext());
         progressDialog.setMessage("Uploading");
         progressDialog.show();
 
@@ -128,13 +146,13 @@ public class ProfileFragment extends Fragment {
 
                     progressDialog.dismiss();
                 } else {
-                    Toast.makeText(getContext(), "Failed to change image", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Failed to change image", Toast.LENGTH_SHORT).show();
                 }
             }).addOnFailureListener(onFailure -> {
-                Toast.makeText(getContext(), onFailure.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), onFailure.getMessage(), Toast.LENGTH_SHORT).show();
             });
         } else {
-            Toast.makeText(getContext(), "No image selected !", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "No image selected !", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -147,9 +165,16 @@ public class ProfileFragment extends Fragment {
             imageUri = data.getData();
 
             if (uploadTask != null && uploadTask.isInProgress())
-                Toast.makeText(getContext(), "Upload in progress", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Upload in progress", Toast.LENGTH_SHORT).show();
             else
                 uploadImage();
         }
     }
+
+    FirebaseAuth.AuthStateListener authStateListener = firebaseAuth -> {
+        if (firebaseAuth.getCurrentUser() == null) {
+            startActivity(new Intent(ProfileActivity.this, LoginActivity.class));
+            finish();
+        }
+    };
 }

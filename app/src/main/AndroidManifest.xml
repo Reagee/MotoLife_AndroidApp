@@ -19,6 +19,7 @@
         android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name="com.app.motolife.user.ProfileActivity" />
         <activity android:name="com.app.motolife.chat.MessageActivity" />
         <activity android:name="com.app.motolife.chat.ChatActivity" />
         <activity android:name="com.app.motolife.GpsStatusHandler" />
@@ -61,14 +62,14 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.app.motolife.firebase.MyFirebaseMessagingService"
+        <service
+            android:name="com.app.motolife.firebase.MyFirebaseMessagingService"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
     </application>
 
 </manifest>

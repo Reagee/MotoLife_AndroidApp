@@ -21,8 +21,6 @@ import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,12 +31,16 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.app.motolife.URI.PowerOffController;
 import com.app.motolife.chat.ChatActivity;
+import com.app.motolife.chat.MessageActivity;
 import com.app.motolife.firebase.MyFirebaseMessagingService;
 import com.app.motolife.firebase.TopicUtils;
 import com.app.motolife.firebase.UserStatus;
 import com.app.motolife.maputils.UserControlUtils;
+import com.app.motolife.model.User;
 import com.app.motolife.ui.SoundService;
 import com.app.motolife.ui.model.UserLocation;
+import com.app.motolife.user.ProfileActivity;
+import com.bumptech.glide.Glide;
 import com.etebarian.meowbottomnavigation.MeowBottomNavigation;
 import com.example.motolife.R;
 import com.github.clans.fab.FloatingActionButton;
@@ -63,6 +65,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
@@ -75,10 +82,10 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
+import de.hdodenhof.circleimageview.CircleImageView;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
@@ -106,11 +113,11 @@ public class MapActivity extends FragmentActivity
     private FirebaseUser firebaseUser;
     private FirebaseAuth firebaseAuth;
 
-    private Button logoutButton;
     private final boolean[] exitAppFlag = new boolean[]{false};
 
     private boolean darkModeEnabled = false;
     private TextView infoMessageBox;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,7 +133,7 @@ public class MapActivity extends FragmentActivity
         notificationManager.createNotificationChannel(new NotificationChannel(
                 channelId, channelName, NotificationManager.IMPORTANCE_LOW));
         Intent intent = new Intent(MapActivity.this, MyFirebaseMessagingService.class);
-        startService(intent);
+        startForegroundService(intent);
 
 
         requestQueue = Volley.newRequestQueue(getApplicationContext());
@@ -239,29 +246,34 @@ public class MapActivity extends FragmentActivity
         FloatingActionButton darkMode = findViewById(R.id.dark_mode_button);
         infoMessageBox = findViewById(R.id.error_message_info_box);
 
-        logoutButton = findViewById(R.id.logout);
-        FrameLayout actionLayout = findViewById(R.id.action_layout);
+        CircleImageView profileImage = findViewById(R.id.profile_image);
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User user = dataSnapshot.getValue(User.class);
+                if (!Objects.equals(user.getImageURL(), "default"))
+                    Glide.with(getApplicationContext()).load(user.getImageURL()).into(profileImage);
+            }
 
-        logoutButton.setOnClickListener(click -> {
-            new AlertDialog.Builder(this, R.style.AlertDialogTheme)
-                    .setMessage("Are you sure ?")
-                    .setPositiveButton("Logout", (dialog, which) -> {
-                        firebaseAuth.signOut();
-                    })
-                    .setNegativeButton(R.string.Cancel, null)
-                    .show();
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+        profileImage.setOnClickListener(click -> {
+            startActivity(new Intent(this, ProfileActivity.class).setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP));
         });
 
         darkMode.setOnClickListener(click -> {
             if (darkModeEnabled) {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.standard_map));
                 darkMode.setLabelText("Enable dark mode");
-                logoutButton.setBackground(getDrawable(R.drawable.logout_dark));
                 darkModeEnabled = false;
             } else {
                 mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.dark_map));
                 darkMode.setLabelText("Disable dark mode");
-                logoutButton.setBackground(getDrawable(R.drawable.logout_white));
                 GradientDrawable gd = new GradientDrawable();
                 gd.setColor(Color.parseColor("#202C38"));
                 gd.setStroke(1, 0xFF000000);
@@ -327,7 +339,9 @@ public class MapActivity extends FragmentActivity
         meowBottomNavigation.setOnClickMenuListener(model -> {
             switch (model.getId()) {
                 case 1:
-                    Toast.makeText(getApplicationContext(), "User messaged !", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(getApplicationContext(), MessageActivity.class);
+                    intent.putExtra("userid", userId);
+                    startActivity(intent);
                     break;
                 case 2:
                     Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
@@ -507,6 +521,23 @@ public class MapActivity extends FragmentActivity
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    User user = snapshot.getValue(User.class);
+                    if (Objects.equals(user.getUsername(), marker.getTitle()))
+                        userId = user.getId();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         meowBottomNavigation.setVisibility(View.VISIBLE);
         meowBottomNavigation.setTranslationY(0);
         clickedMarker = marker;
