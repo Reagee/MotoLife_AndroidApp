@@ -33,12 +33,12 @@ import com.app.motolife.URI.PowerOffController;
 import com.app.motolife.chat.ChatActivity;
 import com.app.motolife.chat.MessageActivity;
 import com.app.motolife.firebase.MyFirebaseMessagingService;
-import com.app.motolife.firebase.TopicUtils;
 import com.app.motolife.firebase.UserStatus;
 import com.app.motolife.maputils.UserControlUtils;
 import com.app.motolife.model.User;
 import com.app.motolife.ui.SoundService;
 import com.app.motolife.ui.model.UserLocation;
+import com.app.motolife.ui.model.UserPoke;
 import com.app.motolife.user.ProfileActivity;
 import com.bumptech.glide.Glide;
 import com.etebarian.meowbottomnavigation.MeowBottomNavigation;
@@ -70,7 +70,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -346,9 +345,7 @@ public class MapActivity extends FragmentActivity
                 case 2:
                     Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
                     new SoundService(this).makePokeSound();
-                    subscribeToTopic(clickedMarker.getTitle());
-                    pokeUser();
-                    FirebaseMessaging.getInstance().unsubscribeFromTopic(clickedMarker.getTitle());
+                    new UserControlUtils(new UserPoke(firebaseUser.getUid(), userId), this).pokeUser();
                     break;
                 case 3:
                     meowBottomNavigation.setVisibility(View.INVISIBLE);
@@ -364,16 +361,6 @@ public class MapActivity extends FragmentActivity
                 .build();
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         checkLocalizationPermissions();
-    }
-
-    private void pokeUser() {
-        UserControlUtils.pokeUser(this.globalUsername);
-    }
-
-    private void subscribeToTopic(String topic) {
-        TopicUtils topicUtils = TopicUtils.getInstance();
-        TopicUtils.subscribeToTopic(topic, topicUtils);
-        Toast.makeText(getApplicationContext(), topicUtils.getMessage(), Toast.LENGTH_SHORT).show();
     }
 
     private void checkIfLocalizationIsEnabled() {
@@ -511,11 +498,9 @@ public class MapActivity extends FragmentActivity
     @Override
     public void onSuccessUsernameGet(String username) {
         if (!Objects.equals(username, null)) {
-            subscribeToTopic(username);
-            this.globalUsername = username;
+            globalUsername = username;
         } else {
             getUsernameAtStart(this);
-            subscribeToTopic(this.globalUsername);
         }
     }
 

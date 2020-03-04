@@ -1,27 +1,27 @@
 package com.app.motolife.ui.model;
 
 public class UserPoke {
-    private String username;
-    private String userToPoke;
+    private String senderId;
+    private String receiverId;
 
-    public UserPoke(String username, String userToPoke) {
-        this.username = username;
-        this.userToPoke = userToPoke;
+    public UserPoke(String senderId, String receiverId) {
+        this.senderId = senderId;
+        this.receiverId = receiverId;
     }
 
-    public String getUsername() {
-        return username;
+    public String getSenderId() {
+        return senderId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
     }
 
-    public String getUserToPoke() {
-        return userToPoke;
+    public String getReceiverId() {
+        return receiverId;
     }
 
-    public void setUserToPoke(String userToPoke) {
-        this.userToPoke = userToPoke;
+    public void setReceiverId(String receiverId) {
+        this.receiverId = receiverId;
     }
 }
