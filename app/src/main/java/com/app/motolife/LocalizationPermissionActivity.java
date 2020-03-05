@@ -32,7 +32,7 @@ public class LocalizationPermissionActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == 1) {
-            startActivity(new Intent(LocalizationPermissionActivity.this, MapActivity.class));
+            finish();
             permissionButton.setError(null);
         } else {
             permissionButton.setError("You need to get access to your localization.");

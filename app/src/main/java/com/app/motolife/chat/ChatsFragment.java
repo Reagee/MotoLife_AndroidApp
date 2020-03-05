@@ -21,6 +21,7 @@ import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -79,7 +80,7 @@ public class ChatsFragment extends Fragment {
         return view;
     }
 
-    private void updateToken(String newToken){
+    private void updateToken(String newToken) {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference("tokens");
         Token token = new Token(newToken);
         reference.child(firebaseUser.getUid()).setValue(token);
@@ -98,10 +99,10 @@ public class ChatsFragment extends Fragment {
                     User user = snapshot.getValue(User.class);
 
                     for (String id : usersList) {
-                        if (user.getId().equals(id)) {
+                        if (Objects.equals(user.getId(), id)) {
                             if (mUsers.size() != 0) {
-                                for (User usr : mUsers) {
-                                    if (!user.getId().equals(usr.getId())) {
+                                for (User usr : new ArrayList<>(mUsers)) {
+                                    if (!Objects.equals(user.getId(), usr.getId()) && !mUsers.contains(user)) {
                                         mUsers.add(user);
                                     }
                                 }

@@ -1,7 +1,6 @@
 package com.app.motolife.user;
 
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -121,15 +120,12 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void uploadImage() {
-        final ProgressDialog progressDialog = new ProgressDialog(getApplicationContext());
-        progressDialog.setMessage("Uploading");
-        progressDialog.show();
-
-        if (!Objects.equals(imageUri, null)) {
+        if (Objects.nonNull(imageUri)) {
             final StorageReference fileReference = storageReference.child(System.currentTimeMillis() + "." +
                     getFileExtension(imageUri));
 
             uploadTask = fileReference.putFile(imageUri);
+            //noinspection unchecked
             uploadTask.continueWithTask((Continuation<UploadTask.TaskSnapshot, Task<Uri>>) task -> {
                 if (!task.isSuccessful()) throw Objects.requireNonNull(task.getException());
 
@@ -143,8 +139,6 @@ public class ProfileActivity extends AppCompatActivity {
                     HashMap<String, Object> map = new HashMap<>();
                     map.put("imageURL", mUri);
                     reference.updateChildren(map);
-
-                    progressDialog.dismiss();
                 } else {
                     Toast.makeText(getApplicationContext(), "Failed to change image", Toast.LENGTH_SHORT).show();
                 }

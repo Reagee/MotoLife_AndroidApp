@@ -14,6 +14,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.icu.text.SimpleDateFormat;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -80,6 +81,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -117,6 +119,7 @@ public class MapActivity extends FragmentActivity
     private TextView infoMessageBox;
     private String userId;
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -152,7 +155,7 @@ public class MapActivity extends FragmentActivity
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED ||
                 ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            startActivity(new Intent(MapActivity.this, LocalizationPermissionActivity.class));
+            startActivity(new Intent(MapActivity.this, LocalizationPermissionActivity.class).setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP));
     }
 
     private BroadcastReceiver mGpsSwitchStateReceiver = new BroadcastReceiver() {
@@ -262,7 +265,7 @@ public class MapActivity extends FragmentActivity
                         unread++;
                     }
                 }
-                if(unread>0)
+                if (unread > 0)
                     notificationIndicator.setVisibility(View.VISIBLE);
                 else
                     notificationIndicator.setVisibility(View.GONE);
@@ -350,6 +353,7 @@ public class MapActivity extends FragmentActivity
         super.onStop();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.P)
     public void initializeMap() {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
