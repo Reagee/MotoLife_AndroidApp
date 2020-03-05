@@ -138,9 +138,21 @@
                 map:fab_colorNormal="#eeeeee"
                 map:fab_colorPressed="#dddddd"
                 map:fab_colorRipple="#dddddd"
-                map:fab_label="Inbox" />
+                map:fab_label="Inbox"/>
 
         </com.github.clans.fab.FloatingActionMenu>
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/notification_ind"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:layout_marginBottom="60dp"
+                    android:layout_marginStart="45dp"
+                    android:layout_gravity="bottom"
+                    android:src="@mipmap/ic_launcher"
+                    android:visibility="gone"
+                    map:civ_border_color="@color/Red"
+                    map:civ_border_width="10dp" />
 
     </FrameLayout>
 
@@ -166,8 +178,8 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_margin="10dp"
-        map:civ_border_width="1dp"
         map:civ_border_color="@color/black"
+        map:civ_border_width="1dp"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent" />
 

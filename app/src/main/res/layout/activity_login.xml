@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/splash_gradient"
+    android:background="@drawable/splash_dark_gradient"
     tools:context="com.app.motolife.SplashActivity">
 
     <ImageView
@@ -17,7 +17,7 @@
         app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/moto_line" />
+        app:srcCompat="@drawable/moto_line_white" />
 
     <TextView
         android:id="@+id/textView"
@@ -26,7 +26,7 @@
         android:layout_marginTop="20dp"
         android:fontFamily="@font/montserrat_subrayada"
         android:text="@string/motolife"
-        android:textColor="@android:color/black"
+        android:textColor="#B8761F"
         android:textSize="40sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
@@ -40,7 +40,7 @@
         android:layout_marginTop="5dp"
         android:fontFamily="@font/montserrat_subrayada"
         android:text="@string/motolife_motto"
-        android:textColor="@android:color/black"
+        android:textColor="#C8B8761F"
         android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,13 +51,17 @@
         android:id="@+id/email_login"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="50dp"
         android:autofillHints="true"
+        android:background="#111111"
         android:ems="10"
         android:gravity="center"
         android:hint="@string/e_mail"
         android:inputType="textEmailAddress"
+        android:padding="10dp"
         android:textAlignment="center"
+        android:textColor="#eeeeee"
+        android:textColorHint="#cccccc"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
@@ -67,29 +71,31 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:autofillHints="Password"
+        android:background="#111111"
         android:ems="10"
         android:gravity="center"
         android:hint="@string/password"
         android:inputType="textPassword"
+        android:padding="10dp"
         android:textAlignment="center"
+        android:textColor="#eeeeee"
+        android:textColorHint="#cccccc"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.489"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/email_login"
-        android:autofillHints="Password" />
+        app:layout_constraintTop_toBottomOf="@+id/email_login" />
 
     <Button
         android:id="@+id/login_button"
         android:layout_width="90dp"
         android:layout_height="40dp"
-        android:layout_marginTop="8dp"
-        android:background="@color/common_google_signin_btn_text_dark_disabled"
-        android:text="@string/login"
+        android:layout_marginTop="12dp"
+        android:background="#222222"
+        android:textColor="@color/white"
         android:gravity="center_horizontal|center_vertical|center"
-        android:textColor="@color/cardview_light_background"
+        android:text="@string/login"
         app:layout_constraintBottom_toTopOf="@+id/go_to_register"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/password_login"
         app:layout_constraintVertical_bias="0.0" />
@@ -100,7 +106,7 @@
         android:layout_height="40dp"
         android:background="@color/common_google_signin_btn_text_dark_disabled"
         android:text="@string/dont_have_acc"
-        android:textColor="@color/cardview_light_background"
+        android:textColor="#96540D"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

@@ -34,11 +34,10 @@ import com.app.motolife.chat.ChatActivity;
 import com.app.motolife.chat.MessageActivity;
 import com.app.motolife.firebase.MyFirebaseMessagingService;
 import com.app.motolife.firebase.UserStatus;
-import com.app.motolife.maputils.UserControlUtils;
+import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
 import com.app.motolife.ui.SoundService;
 import com.app.motolife.ui.model.UserLocation;
-import com.app.motolife.ui.model.UserPoke;
 import com.app.motolife.user.ProfileActivity;
 import com.bumptech.glide.Glide;
 import com.etebarian.meowbottomnavigation.MeowBottomNavigation;
@@ -237,8 +236,11 @@ public class MapActivity extends FragmentActivity
         mMap.setOnMyLocationClickListener(this);
         mMap.setOnMarkerClickListener(this);
 
-
         FloatingActionMenu actionMenu = findViewById(R.id.action_menu);
+        actionMenu.getMenuIconView().setImageResource(R.drawable.menu_float_white);
+        actionMenu.setIconAnimated(false);
+        actionMenu.setClosedOnTouchOutside(true);
+
         FloatingActionButton addEvent = findViewById(R.id.add_event_button);
         FloatingActionButton checkEvents = findViewById(R.id.events_button);
         FloatingActionButton viewMessages = findViewById(R.id.messages_button);
@@ -246,6 +248,32 @@ public class MapActivity extends FragmentActivity
         infoMessageBox = findViewById(R.id.error_message_info_box);
 
         CircleImageView profileImage = findViewById(R.id.profile_image);
+        CircleImageView notificationIndicator = findViewById(R.id.notification_ind);
+
+        DatabaseReference databaseReference;
+        databaseReference = FirebaseDatabase.getInstance().getReference("chat");
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                int unread = 0;
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Chat chat = snapshot.getValue(Chat.class);
+                    if (Objects.requireNonNull(chat).getReceiver().equals(firebaseUser.getUid()) && !chat.isIsseen()) {
+                        unread++;
+                    }
+                }
+                if(unread>0)
+                    notificationIndicator.setVisibility(View.VISIBLE);
+                else
+                    notificationIndicator.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
         reference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -345,7 +373,7 @@ public class MapActivity extends FragmentActivity
                 case 2:
                     Toast.makeText(getApplicationContext(), "User Poked !", Toast.LENGTH_SHORT).show();
                     new SoundService(this).makePokeSound();
-                    new UserControlUtils(new UserPoke(firebaseUser.getUid(), userId), this).pokeUser();
+//                    new UserControlUtils(new UserPoke(firebaseUser.getUid(), userId), this).pokeUser();
                     break;
                 case 3:
                     meowBottomNavigation.setVisibility(View.INVISIBLE);
@@ -365,10 +393,10 @@ public class MapActivity extends FragmentActivity
 
     private void checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        boolean gps_enabled;
-        gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean isNetworkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (!gps_enabled) {
+        if (!gps_enabled || !isNetworkEnabled) {
             startActivity(new Intent(MapActivity.this, GpsStatusHandler.class).setFlags(Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP));
         }
     }
