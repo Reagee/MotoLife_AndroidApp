@@ -1,4 +1,4 @@
-package com.app.motolife.adapter;
+package com.app.motolife.chat;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.app.motolife.chat.MessageActivity;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
 import com.bumptech.glide.Glide;

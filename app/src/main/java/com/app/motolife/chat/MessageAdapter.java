@@ -1,4 +1,4 @@
-package com.app.motolife.adapter;
+package com.app.motolife.chat;
 
 import android.content.Context;
 import android.view.LayoutInflater;

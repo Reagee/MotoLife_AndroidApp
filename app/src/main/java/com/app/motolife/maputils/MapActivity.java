@@ -1,4 +1,4 @@
-package com.app.motolife;
+package com.app.motolife.maputils;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -30,6 +30,9 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.app.motolife.user.GpsStatusHandler;
+import com.app.motolife.user.LocalizationPermissionActivity;
+import com.app.motolife.user.LoginActivity;
 import com.app.motolife.URI.PowerOffController;
 import com.app.motolife.chat.ChatActivity;
 import com.app.motolife.chat.MessageActivity;
@@ -37,8 +40,8 @@ import com.app.motolife.firebase.MyFirebaseMessagingService;
 import com.app.motolife.firebase.UserStatus;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
-import com.app.motolife.ui.SoundService;
-import com.app.motolife.ui.model.UserLocation;
+import com.app.motolife.Notifications.SoundService;
+import com.app.motolife.model.UserLocation;
 import com.app.motolife.user.ProfileActivity;
 import com.bumptech.glide.Glide;
 import com.etebarian.meowbottomnavigation.MeowBottomNavigation;

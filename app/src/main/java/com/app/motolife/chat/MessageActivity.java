@@ -14,7 +14,6 @@ import com.app.motolife.Notifications.Data;
 import com.app.motolife.Notifications.MyResponse;
 import com.app.motolife.Notifications.Sender;
 import com.app.motolife.Notifications.Token;
-import com.app.motolife.adapter.MessageAdapter;
 import com.app.motolife.firebase.APIService;
 import com.app.motolife.firebase.UserStatus;
 import com.app.motolife.model.Chat;

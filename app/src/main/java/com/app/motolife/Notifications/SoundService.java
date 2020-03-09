@@ -1,4 +1,4 @@
-package com.app.motolife.ui;
+package com.app.motolife.Notifications;
 
 import android.app.Activity;
 import android.media.MediaPlayer;

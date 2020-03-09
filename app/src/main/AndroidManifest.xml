@@ -23,11 +23,11 @@
         <activity android:name="com.app.motolife.chat.MessageActivity" />
         <activity android:name="com.app.motolife.chat.ChatActivity" />
         <activity
-            android:name="com.app.motolife.GpsStatusHandler"
+            android:name="com.app.motolife.user.GpsStatusHandler"
             android:launchMode="singleTask" />
-        <activity android:name="com.app.motolife.LocalizationPermissionActivity" />
-        <activity android:name="com.app.motolife.LoginActivity" />
-        <activity android:name="com.app.motolife.RegistrationActivity" />
+        <activity android:name="com.app.motolife.user.LocalizationPermissionActivity" />
+        <activity android:name="com.app.motolife.user.LoginActivity" />
+        <activity android:name="com.app.motolife.user.RegistrationActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -52,7 +52,7 @@
             android:value="false" />
 
         <activity
-            android:name="com.app.motolife.MapActivity"
+            android:name="com.app.motolife.maputils.MapActivity"
             android:label="@string/title_activity_map" />
         <activity
             android:name="com.app.motolife.SplashActivity"

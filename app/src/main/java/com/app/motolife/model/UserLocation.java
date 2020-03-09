@@ -1,4 +1,4 @@
-package com.app.motolife.ui.model;
+package com.app.motolife.model;
 
 import java.sql.Timestamp;
 

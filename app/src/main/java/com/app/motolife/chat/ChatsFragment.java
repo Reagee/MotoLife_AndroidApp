@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.app.motolife.Notifications.Token;
-import com.app.motolife.adapter.UserAdapter;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
 import com.example.motolife.R;

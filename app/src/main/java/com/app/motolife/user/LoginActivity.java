@@ -1,4 +1,4 @@
-package com.app.motolife;
+package com.app.motolife.user;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.app.motolife.URI.PowerOffController;
+import com.app.motolife.maputils.MapActivity;
 import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

@@ -10,7 +10,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.app.motolife.LoginActivity;
 import com.app.motolife.model.User;
 import com.bumptech.glide.Glide;
 import com.example.motolife.R;

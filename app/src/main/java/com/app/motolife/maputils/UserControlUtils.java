@@ -13,7 +13,7 @@ import com.app.motolife.Notifications.OreoNotification;
 import com.app.motolife.chat.MessageActivity;
 import com.app.motolife.firebase.APIService;
 import com.app.motolife.model.User;
-import com.app.motolife.ui.model.UserPoke;
+import com.app.motolife.model.UserPoke;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;

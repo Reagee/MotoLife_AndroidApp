@@ -1,4 +1,4 @@
-package com.app.motolife;
+package com.app.motolife.user;
 
 import android.content.Intent;
 import android.os.Bundle;

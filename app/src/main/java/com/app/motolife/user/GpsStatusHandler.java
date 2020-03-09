@@ -1,4 +1,4 @@
-package com.app.motolife;
+package com.app.motolife.user;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,6 +10,7 @@ import android.provider.Settings;
 import android.view.WindowManager;
 import android.widget.Button;
 
+import com.app.motolife.SplashActivity;
 import com.example.motolife.R;
 
 import java.util.Objects;

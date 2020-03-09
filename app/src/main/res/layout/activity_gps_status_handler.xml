@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
-    tools:context="com.app.motolife.GpsStatusHandler">
+    tools:context="com.app.motolife.user.GpsStatusHandler">
 
     <ImageView
         android:id="@+id/gps_handler_map_logo"
