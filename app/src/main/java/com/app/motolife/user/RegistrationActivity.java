@@ -12,11 +12,11 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.app.motolife.firebase.FirebaseUtils;
 import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,9 +35,9 @@ public class RegistrationActivity extends AppCompatActivity {
     private EditText password;
     private Button registerButton;
     private Button backToLogin;
+    private FirebaseUtils firebaseUtils;
     private FirebaseAuth firebaseAuth;
     private RequestQueue requestQueue;
-    private DatabaseReference reference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +46,7 @@ public class RegistrationActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
+        firebaseUtils = FirebaseUtils.getInstance();
         initializeFields();
 
         registerButton.setOnClickListener(click -> {
@@ -74,7 +75,7 @@ public class RegistrationActivity extends AppCompatActivity {
                                 FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
                                 String userId = firebaseUser.getUid();
 
-                                reference = FirebaseDatabase.getInstance().getReference("users").child(userId);
+                                DatabaseReference reference = firebaseUtils.getDatabaseReference("users").child(userId);
                                 HashMap<String, String> userMap = new HashMap<>();
                                 userMap.put("id", userId);
                                 userMap.put("username", usernameVal);
@@ -102,7 +103,8 @@ public class RegistrationActivity extends AppCompatActivity {
     }
 
     private void initializeFields() {
-        firebaseAuth = FirebaseAuth.getInstance();
+
+        firebaseAuth = firebaseUtils.getFirebaseAuth();
         requestQueue = Volley.newRequestQueue(getApplicationContext());
         username = findViewById(R.id.username_registration);
         email = findViewById(R.id.email_registration);

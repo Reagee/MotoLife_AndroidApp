@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.app.motolife.firebase.FirebaseUtils;
 import com.app.motolife.model.User;
 import com.bumptech.glide.Glide;
 import com.example.motolife.R;
@@ -21,9 +22,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
@@ -38,15 +37,12 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ProfileActivity extends AppCompatActivity {
 
+    private static final int IMAGE_REQUEST = 1;
+
+    private FirebaseUtils firebaseUtils;
     private CircleImageView image_profile;
     private TextView username;
 
-    private DatabaseReference reference;
-    private FirebaseUser firebaseUser;
-    private FirebaseAuth firebaseAuth;
-
-    private StorageReference storageReference;
-    private static final int IMAGE_REQUEST = 1;
     private Uri imageUri;
     private StorageTask uploadTask;
 
@@ -59,17 +55,19 @@ public class ProfileActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         setContentView(R.layout.activity_profile);
+        firebaseUtils = FirebaseUtils.getInstance();
+
         image_profile = findViewById(R.id.profile_image);
         username = findViewById(R.id.username);
         backButton = findViewById(R.id.back_button);
         logoutButton = findViewById(R.id.logout_button);
 
-        storageReference = FirebaseStorage.getInstance().getReference("uploads");
+        StorageReference storageReference = firebaseUtils.getStorageReference("uploads");
 
-        firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseAuth firebaseAuth = firebaseUtils.getFirebaseAuth();
         firebaseAuth.addAuthStateListener(authStateListener);
-        firebaseUser = firebaseAuth.getCurrentUser();
-        reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
+        FirebaseUser firebaseUser = firebaseUtils.getFirebaseUser();
+        DatabaseReference reference = firebaseUtils.getDatabaseReference("users").child(firebaseUser.getUid());
 
         reference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -120,7 +118,7 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void uploadImage() {
         if (Objects.nonNull(imageUri)) {
-            final StorageReference fileReference = storageReference.child(System.currentTimeMillis() + "." +
+            final StorageReference fileReference = firebaseUtils.getStorageReference(null).child(System.currentTimeMillis() + "." +
                     getFileExtension(imageUri));
 
             uploadTask = fileReference.putFile(imageUri);
@@ -134,7 +132,8 @@ public class ProfileActivity extends AppCompatActivity {
                     Uri downloadUri = onComplete.getResult();
                     String mUri = downloadUri.toString();
 
-                    reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
+                    DatabaseReference reference = firebaseUtils.getDatabaseReference("users")
+                            .child(firebaseUtils.getFirebaseUser().getUid());
                     HashMap<String, Object> map = new HashMap<>();
                     map.put("imageURL", mUri);
                     reference.updateChildren(map);

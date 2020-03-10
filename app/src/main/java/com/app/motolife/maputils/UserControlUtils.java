@@ -12,9 +12,9 @@ import com.app.motolife.Notifications.Client;
 import com.app.motolife.Notifications.OreoNotification;
 import com.app.motolife.chat.MessageActivity;
 import com.app.motolife.firebase.APIService;
+import com.app.motolife.firebase.FirebaseUtils;
 import com.app.motolife.model.User;
 import com.app.motolife.model.UserPoke;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 
 public class UserControlUtils {
 
+    private static FirebaseUtils firebaseUtils = FirebaseUtils.getInstance();
     private APIService apiService;
     private FirebaseUser firebaseUser;
     private DatabaseReference reference;
@@ -37,8 +38,8 @@ public class UserControlUtils {
     private Activity activity;
 
     public UserControlUtils(UserPoke userPoke, Activity activity) {
-        this.firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        this.reference = FirebaseDatabase.getInstance().getReference("pokes");
+        this.firebaseUser = firebaseUtils.getFirebaseUser();
+        this.reference = firebaseUtils.getDatabaseReference("pokes");
         this.userPoke = userPoke;
         this.userid = userPoke.getReceiverId();
         this.activity = activity;
@@ -47,8 +48,7 @@ public class UserControlUtils {
     public void pokeUser() {
 
         apiService = Client.getClient("https://fcm.googleapis.com/").create(APIService.class);
-
-        reference = FirebaseDatabase.getInstance().getReference();
+        reference = firebaseUtils.getDatabaseReference(null);
         HashMap<String, Object> pokeMap = new HashMap<>();
         pokeMap.put("sender", userPoke.getSenderId());
         pokeMap.put("receiver", userPoke.getReceiverId());
@@ -60,7 +60,7 @@ public class UserControlUtils {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 User user = dataSnapshot.getValue(User.class);
-                sendOreoNotification(userPoke, user);
+                sendOreoNotification(userPoke, Objects.requireNonNull(user));
             }
 
             @Override

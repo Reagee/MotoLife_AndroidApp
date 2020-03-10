@@ -84,14 +84,14 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         return mUsers.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
         private TextView username;
         private ImageView profile_image;
         private ImageView image_online;
         private ImageView image_offline;
         private TextView last_msg;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
 
             username = itemView.findViewById(R.id.username);

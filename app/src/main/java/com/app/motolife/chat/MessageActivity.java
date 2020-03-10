@@ -15,6 +15,7 @@ import com.app.motolife.Notifications.MyResponse;
 import com.app.motolife.Notifications.Sender;
 import com.app.motolife.Notifications.Token;
 import com.app.motolife.firebase.APIService;
+import com.app.motolife.firebase.FirebaseUtils;
 import com.app.motolife.firebase.UserStatus;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
@@ -51,6 +52,7 @@ public class MessageActivity extends AppCompatActivity {
     private CircleImageView profile_image;
     private TextView username;
 
+    private FirebaseUtils firebaseUtils;
     private FirebaseUser firebaseUser;
     private DatabaseReference reference;
 
@@ -75,27 +77,11 @@ public class MessageActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         setContentView(R.layout.activity_message);
 
-        Toolbar toolbar = findViewById(R.id.chat_toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(click -> finish());
+        firebaseUtils = FirebaseUtils.getInstance();
+        setupView();
 
         apiService = Client.getClient("https://fcm.googleapis.com/").create(APIService.class);
-
-        recyclerView = findViewById(R.id.recycler_view);
-        recyclerView.setHasFixedSize(true);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
-        linearLayoutManager.setStackFromEnd(true);
-        recyclerView.setLayoutManager(linearLayoutManager);
-
-        profile_image = findViewById(R.id.user_image);
-        username = findViewById(R.id.username);
-        send_button = findViewById(R.id.send_message_button);
-        message_to_send = findViewById(R.id.message_to_send);
-
-        Intent intent = getIntent();
-        userid = intent.getStringExtra("userid");
+        userid = getIntent().getStringExtra("userid");
 
         send_button.setOnClickListener(click -> {
             notify = true;
@@ -107,8 +93,8 @@ public class MessageActivity extends AppCompatActivity {
                 Toast.makeText(this, "You can't send empty message", Toast.LENGTH_SHORT).show();
         });
 
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        reference = FirebaseDatabase.getInstance().getReference("users").child(userid);
+        firebaseUser = firebaseUtils.getFirebaseUser();
+        reference = firebaseUtils.getDatabaseReference("users").child(userid);
 
         reference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -133,8 +119,29 @@ public class MessageActivity extends AppCompatActivity {
 
     }
 
+    private void setupView(){
+        Toolbar toolbar = findViewById(R.id.chat_toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar.setNavigationOnClickListener(click -> finish());
+
+        recyclerView = findViewById(R.id.recycler_view);
+        recyclerView.setHasFixedSize(true);
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext());
+        linearLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
+        profile_image = findViewById(R.id.user_image);
+        username = findViewById(R.id.username);
+        send_button = findViewById(R.id.send_message_button);
+        message_to_send = findViewById(R.id.message_to_send);
+
+    }
+
     private void seenMessage(String userid) {
-        reference = FirebaseDatabase.getInstance().getReference("chat");
+        reference = firebaseUtils.getDatabaseReference("chat");
         seenListener = reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -168,7 +175,7 @@ public class MessageActivity extends AppCompatActivity {
         reference.child("chat").push().setValue(messageMap);
 
         final String msg = message;
-        reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
+        reference = firebaseUtils.getDatabaseReference("users").child(firebaseUser.getUid());
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -187,7 +194,7 @@ public class MessageActivity extends AppCompatActivity {
     }
 
     private void sendNotification(String receiver, String username, String message) {
-        DatabaseReference tokens = FirebaseDatabase.getInstance().getReference("tokens");
+        DatabaseReference tokens = firebaseUtils.getDatabaseReference("tokens");
         Query query = tokens.orderByKey().equalTo(receiver);
         query.addValueEventListener(new ValueEventListener() {
             @Override
@@ -227,7 +234,7 @@ public class MessageActivity extends AppCompatActivity {
     private void readMessages(String myid, String userid, String imageurl) {
         mChat = new ArrayList<>();
 
-        reference = FirebaseDatabase.getInstance().getReference("chat");
+        reference = firebaseUtils.getDatabaseReference("chat");
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

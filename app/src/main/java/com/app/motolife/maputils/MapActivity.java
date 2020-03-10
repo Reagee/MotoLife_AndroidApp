@@ -30,18 +30,19 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.app.motolife.user.GpsStatusHandler;
-import com.app.motolife.user.LocalizationPermissionActivity;
-import com.app.motolife.user.LoginActivity;
+import com.app.motolife.Notifications.SoundService;
 import com.app.motolife.URI.PowerOffController;
 import com.app.motolife.chat.ChatActivity;
 import com.app.motolife.chat.MessageActivity;
+import com.app.motolife.firebase.FirebaseUtils;
 import com.app.motolife.firebase.MyFirebaseMessagingService;
 import com.app.motolife.firebase.UserStatus;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
-import com.app.motolife.Notifications.SoundService;
 import com.app.motolife.model.UserLocation;
+import com.app.motolife.user.GpsStatusHandler;
+import com.app.motolife.user.LocalizationPermissionActivity;
+import com.app.motolife.user.LoginActivity;
 import com.app.motolife.user.ProfileActivity;
 import com.bumptech.glide.Glide;
 import com.etebarian.meowbottomnavigation.MeowBottomNavigation;
@@ -67,7 +68,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -113,8 +113,7 @@ public class MapActivity extends FragmentActivity
 
     private String globalUsername;
     private Marker clickedMarker;
-    private FirebaseUser firebaseUser;
-    private FirebaseAuth firebaseAuth;
+    private FirebaseUtils firebaseUtils;
 
     private final boolean[] exitAppFlag = new boolean[]{false};
 
@@ -130,6 +129,7 @@ public class MapActivity extends FragmentActivity
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
         setContentView(R.layout.activity_map);
         registerReceiver(mGpsSwitchStateReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
+        firebaseUtils = FirebaseUtils.getInstance();
 
         String channelId = getString(R.string.default_notification_channel_id);
         String channelName = getString(R.string.default_notification_channel_name);
@@ -144,9 +144,8 @@ public class MapActivity extends FragmentActivity
         PowerManager manager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wakeLock =
                 Objects.requireNonNull(manager).newWakeLock(PARTIAL_WAKE_LOCK, getString(R.string.RIDING_WAKE_LOCK));
-        firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseAuth firebaseAuth = firebaseUtils.getFirebaseAuth();
         firebaseAuth.addAuthStateListener(authStateListener);
-        firebaseUser = firebaseAuth.getCurrentUser();
         getUsernameAtStart(this);
 
         checkLocalizationPermissions();
@@ -264,7 +263,8 @@ public class MapActivity extends FragmentActivity
                 int unread = 0;
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Chat chat = snapshot.getValue(Chat.class);
-                    if (Objects.requireNonNull(chat).getReceiver().equals(firebaseUser.getUid()) && !chat.isIsseen()) {
+                    if (Objects.requireNonNull(chat).getReceiver()
+                            .equals(firebaseUtils.getFirebaseUser().getUid()) && !chat.isIsseen()) {
                         unread++;
                     }
                 }
@@ -280,7 +280,7 @@ public class MapActivity extends FragmentActivity
             }
         });
 
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUtils.getFirebaseUser().getUid());
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -463,7 +463,7 @@ public class MapActivity extends FragmentActivity
         if (!Objects.equals(usersLocation, null)) {
             for (int i = 0; i < usersLocation.length(); i++) {
                 if (usersLocation.getJSONObject(i).getString("email")
-                        .equalsIgnoreCase(firebaseUser.getEmail()))
+                        .equalsIgnoreCase(firebaseUtils.getFirebaseUser().getEmail()))
                     continue;
 
                 UserLocation user = new UserLocation();
@@ -490,10 +490,10 @@ public class MapActivity extends FragmentActivity
 
     private void updateUserLocation(double latitude, double longitude) {
 
-        if (!Objects.equals(firebaseUser, null)) {
+        if (!Objects.equals(firebaseUtils.getFirebaseUser(), null)) {
             StringRequest request = new StringRequest
                     (Request.Method.GET, API_GET_UPDATE_USER_LOCATION +
-                            "?email=" + firebaseUser.getEmail() +
+                            "?email=" + firebaseUtils.getFirebaseUser().getEmail() +
                             "&latitude=" + latitude +
                             "&longitude=" + longitude,
                             response -> {
@@ -513,7 +513,7 @@ public class MapActivity extends FragmentActivity
 
     private void getUsernameAtStart(HttpCallback callback) {
         StringRequest request = new StringRequest
-                (Request.Method.GET, API_GET_UPDATE_USERNAME + "?email=" + firebaseUser.getEmail(),
+                (Request.Method.GET, API_GET_UPDATE_USERNAME + "?email=" + firebaseUtils.getFirebaseUser().getEmail(),
                         response -> {
                             Log.println(Log.INFO, "RESPONSE SUBSCRIBE: ", response);
                             callback.onSuccessUsernameGet(response);

@@ -7,18 +7,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.app.motolife.URI.PowerOffController;
+import com.app.motolife.firebase.FirebaseUtils;
 import com.app.motolife.maputils.MapActivity;
 import com.example.motolife.R;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -26,8 +26,6 @@ public class LoginActivity extends AppCompatActivity {
     private EditText password;
     private Button loginButton;
     private Button goToRegisterButton;
-    private FirebaseAuth auth;
-    private FirebaseUser user;
     private final boolean[] exitAppFlag = new boolean[]{false};
 
     @Override
@@ -37,7 +35,8 @@ public class LoginActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
 
-        auth = FirebaseAuth.getInstance();
+        FirebaseUtils firebaseUtils = FirebaseUtils.getInstance();
+        FirebaseAuth auth = firebaseUtils.getFirebaseAuth();
 
         email = findViewById(R.id.email_login);
         password = findViewById(R.id.password_login);

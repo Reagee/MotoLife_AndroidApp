@@ -73,8 +73,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void updateToken(String newToken) {
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("tokens");
+        FirebaseUtils firebaseUtils = FirebaseUtils.getInstance();
+        FirebaseUser firebaseUser = firebaseUtils.getFirebaseUser();
+        DatabaseReference reference = firebaseUtils.getDatabaseReference("tokens");
         Token token = new Token(newToken);
         reference.child(Objects.requireNonNull(firebaseUser).getUid()).setValue(token);
     }
@@ -82,7 +83,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private void sendRegistrationToServer(String token) {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseAuth firebaseAuth = FirebaseUtils.getInstance().getFirebaseAuth();
         if (firebaseAuth.getCurrentUser() != null) {
             StringRequest request = new StringRequest(
                     Request.Method.GET, API_SET_USER_TOKEN +

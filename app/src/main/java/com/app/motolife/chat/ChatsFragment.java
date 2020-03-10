@@ -6,15 +6,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.app.motolife.Notifications.Token;
+import com.app.motolife.firebase.FirebaseUtils;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
 import com.example.motolife.R;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 
@@ -33,6 +32,7 @@ public class ChatsFragment extends Fragment {
     private UserAdapter userAdapter;
     private List<User> mUsers;
 
+    private FirebaseUtils firebaseUtils;
     private FirebaseUser firebaseUser;
     private DatabaseReference reference;
 
@@ -42,15 +42,14 @@ public class ChatsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
+        firebaseUtils = FirebaseUtils.getInstance();
 
-        recyclerView = view.findViewById(R.id.recycler_view_chat_list);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        setupRecyclerView(view);
 
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        firebaseUser = firebaseUtils.getFirebaseUser();
         usersList = new ArrayList<>();
 
-        reference = FirebaseDatabase.getInstance().getReference("chat");
+        reference = firebaseUtils.getDatabaseReference("chat");
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -65,7 +64,6 @@ public class ChatsFragment extends Fragment {
                         usersList.add(chat.getSender());
                     }
                 }
-
                 readChats();
             }
 
@@ -75,12 +73,17 @@ public class ChatsFragment extends Fragment {
             }
         });
         updateToken(FirebaseInstanceId.getInstance().getToken());
-
         return view;
     }
 
+    private void setupRecyclerView(View view) {
+        recyclerView = view.findViewById(R.id.recycler_view_chat_list);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+    }
+
     private void updateToken(String newToken) {
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("tokens");
+        DatabaseReference reference = firebaseUtils.getDatabaseReference("tokens");
         Token token = new Token(newToken);
         reference.child(firebaseUser.getUid()).setValue(token);
     }
@@ -88,15 +91,13 @@ public class ChatsFragment extends Fragment {
     private void readChats() {
         mUsers = new ArrayList<>();
 
-        reference = FirebaseDatabase.getInstance().getReference("users");
+        reference = firebaseUtils.getDatabaseReference("users");
         reference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 mUsers.clear();
-
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     User user = snapshot.getValue(User.class);
-
                     for (String id : usersList) {
                         if (Objects.equals(user.getId(), id)) {
                             if (mUsers.size() != 0) {

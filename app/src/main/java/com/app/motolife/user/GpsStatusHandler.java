@@ -48,7 +48,7 @@ public class GpsStatusHandler extends AppCompatActivity {
 
     private void checkIfLocalizationIsEnabled() {
         LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        boolean gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean gps_enabled = Objects.requireNonNull(lm).isProviderEnabled(LocationManager.GPS_PROVIDER);
         boolean isNetworkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         String activity = Objects.requireNonNull(getIntent().getExtras()).getString("activity", "splash");

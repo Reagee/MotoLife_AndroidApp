@@ -5,12 +5,12 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.app.motolife.firebase.FirebaseUtils;
 import com.app.motolife.model.Chat;
 import com.app.motolife.model.User;
 import com.bumptech.glide.Glide;
 import com.example.motolife.R;
 import com.google.android.material.tabs.TabLayout;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -36,6 +36,7 @@ public class ChatActivity extends AppCompatActivity {
     private ImageView profile_image;
     private TextView username;
 
+    private FirebaseUtils firebaseUtils;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
 
@@ -46,19 +47,13 @@ public class ChatActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         setContentView(R.layout.activity_chat);
 
-        Toolbar toolbar = findViewById(R.id.chat_toolbar);
-        setSupportActionBar(toolbar);
-        Objects.requireNonNull(getSupportActionBar()).setTitle("");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(click -> {
-            finish();
-        });
+        firebaseUtils = FirebaseUtils.getInstance();
+        setupToolbar();
 
         profile_image = findViewById(R.id.user_image);
         username = findViewById(R.id.username);
-
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference("users").child(firebaseUser.getUid());
+        firebaseUser = firebaseUtils.getFirebaseUser();
+        databaseReference = firebaseUtils.getDatabaseReference("users").child(firebaseUser.getUid());
 
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -81,7 +76,7 @@ public class ChatActivity extends AppCompatActivity {
         final TabLayout tabLayout = findViewById(R.id.tab_chat_layout);
         final ViewPager viewPager = findViewById(R.id.view_pager);
 
-        databaseReference = FirebaseDatabase.getInstance().getReference("chat");
+        databaseReference = firebaseUtils.getDatabaseReference("chat");
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -106,6 +101,16 @@ public class ChatActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError databaseError) {
 
             }
+        });
+    }
+
+    private void setupToolbar(){
+        Toolbar toolbar = findViewById(R.id.chat_toolbar);
+        setSupportActionBar(toolbar);
+        Objects.requireNonNull(getSupportActionBar()).setTitle("");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar.setNavigationOnClickListener(click -> {
+            finish();
         });
     }
 
